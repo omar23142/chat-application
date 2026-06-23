@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ChatGateway } from './chat/chat.gateway';
+// import { ChatGateway } from './chat/chat.gateway';
 import { JwtModule, JwtModuleOptions, JwtService } from '@nestjs/jwt';
 import { UsersModule } from './users/users.module';
 // import { UploadsModule } from './Uploads/Uploads.Module';
@@ -9,8 +9,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { User } from './users/entity/User.entity';
+import { PrivateChatRoom } from './chat/entity/PrivateChatRoom.entity';
+import { PrivateMessage } from './chat/entity/PrivateMessage.entity';
 import { Authgateway } from './chat/ChatAuth.gateway';
-import {RoomManger} from './chat/room-manager.service';
+import { RoomManger } from './chat/room-manager.service';
+import { PrivateChatService } from './chat/private-chat.service';
 
 console.log('MAIN', process.env.NODE_ENV);
 @Module({
@@ -58,20 +61,18 @@ console.log('MAIN', process.env.NODE_ENV);
           host: 'localhost',
           synchronize: process.env.NODE_ENV !== 'production',
           //dropSchema: true,
-          entities: [User],
+          entities: [User, PrivateChatRoom, PrivateMessage],
           port: port,
         } as TypeOrmModuleOptions;
       },
     }),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 10000, limit: 10 }],
     }),
+    TypeOrmModule.forFeature([User, PrivateChatRoom, PrivateMessage]),
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway, Authgateway, RoomManger],
+  providers: [AppService, Authgateway, RoomManger, PrivateChatService],
 })
-export class AppModule {
-  
-  
-}
+export class AppModule {}

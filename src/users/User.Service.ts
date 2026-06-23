@@ -265,4 +265,50 @@ export class UserService {
     const resault = await this.userRepo.save(user);
     return 'your password has changed succussfuly, and you can login';
   }
+
+  async setOnline(userId: number, socketId: string): Promise<void> {
+    await this.userRepo.update(userId, {
+      isOnline: true,
+      socketId,
+      lastSeen: null,
+    });
+  }
+
+  async setOffline(userId: number, socketId: string): Promise<void> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (user && user.socketId === socketId) {
+      await this.userRepo.update(userId, {
+        isOnline: false,
+        socketId: null,
+        lastSeen: new Date(),
+      });
+    }
+  }
+
+  async isOnline(userId: number): Promise<boolean> {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: { isOnline: true },
+    });
+    return user?.isOnline ?? false;
+  }
+
+  async getLastSeen(userId: number): Promise<Date | null> {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: { lastSeen: true },
+    });
+    return user?.lastSeen ?? null;
+  }
+
+  async getSocketIds(userId: number): Promise<string[]> {
+    const user = await this.userRepo.findOne({
+      where: { id: userId },
+      select: { socketId: true, isOnline: true },
+    });
+    if (user?.isOnline && user?.socketId) {
+      return [user.socketId];
+    }
+    return [];
+  }
 }

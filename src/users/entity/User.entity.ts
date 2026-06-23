@@ -5,7 +5,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  // OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -61,11 +60,15 @@ export class User {
   })
   updatedAt: Date;
 
-  // @OneToMany(() => Video, (video) => video.user)
-  // videos: Video[]
+  @Column({ type: 'boolean', default: false })
+  isOnline: boolean;
 
-//   @OneToMany(() => Lists, (lists) => lists.user)
-//   lists: Lists[];
-//   @OneToMany(() => Vocabulary, (vocabulary) => vocabulary.user)
-//   vocabulary: Vocabulary[];
- }
+  @Column({ type: 'varchar', nullable: true })
+  socketId: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  lastSeen: Date | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  deletedAt: Date | null;
+}
