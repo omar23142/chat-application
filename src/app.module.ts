@@ -14,6 +14,7 @@ import { PrivateMessage } from './chat/entity/PrivateMessage.entity';
 import { Authgateway } from './chat/ChatAuth.gateway';
 import { RoomManger } from './chat/room-manager.service';
 import { PrivateChatService } from './chat/private-chat.service';
+import { ChatController } from './chat/chat.controller';
 
 console.log('MAIN', process.env.NODE_ENV);
 @Module({
@@ -52,7 +53,7 @@ console.log('MAIN', process.env.NODE_ENV);
         const database = config.get<string>('DB_database');
         const type = config.get<string>('DB_type');
         const port = config.get<string>('DB_port');
-        console.log('dddddddd', dbUsername, dbpass, database, type, port);
+        // console.log('dddddddd', dbUsername, dbpass, database, type, port);
         return {
           database: database,
           type: type,
@@ -72,7 +73,7 @@ console.log('MAIN', process.env.NODE_ENV);
     }),
     TypeOrmModule.forFeature([User, PrivateChatRoom, PrivateMessage]),
   ],
-  controllers: [AppController],
+  controllers: [AppController, ChatController],
   providers: [AppService, Authgateway, RoomManger, PrivateChatService],
 })
 export class AppModule {}

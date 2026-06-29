@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, Not } from 'typeorm';
 import { PrivateChatRoom } from './entity/PrivateChatRoom.entity';
 import { PrivateMessage } from './entity/PrivateMessage.entity';
 import { User } from 'src/users/entity/User.entity';
@@ -121,8 +121,9 @@ export class PrivateChatService {
     }
 
     if (messageId) {
+      // علّم رسالة واحدة كمقروءة: نتأكد أنها ضمن غرفتها وأن القارئ ليس مرسلها
       await this.msgRepo.update(
-        { id: messageId, roomId, senderId: userId },
+        { id: messageId, roomId, senderId: Not(userId) },
         { readAt: new Date() },
       );
     } else {
