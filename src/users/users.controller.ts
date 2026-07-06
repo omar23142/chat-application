@@ -91,6 +91,10 @@ export class UsersController {
     return result;
   }
 
+  //api/v1/users/auth/google/callback
+
+
+  
   @Delete('/api/v1/users/deletMe')
   @UseGuards(ProtectGard)
   public deleteMe(@GetCurrentUser() user) {

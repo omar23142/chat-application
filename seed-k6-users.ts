@@ -9,6 +9,13 @@ import * as fs from 'fs';
 import { Repository } from 'typeorm';
 import { userType } from './src/utils/enum';
 
+
+// useage:
+//  npx ts-node -r tsconfig-paths/register seed-k6-users.ts
+
+
+
+
 async function bootstrap() {
   console.log('Starting the seeding process...');
   // Initialize the NestJS application context (this connects to DB and loads configs)
@@ -26,7 +33,7 @@ async function bootstrap() {
 
   const USERS_COUNT = 1000;
   const BATCH_SIZE = 100;
-  
+
   // We will store all generated tokens here
   const k6UsersData: { email: string; token: string }[] = [];
 
@@ -37,7 +44,7 @@ async function bootstrap() {
 
   for (let i = 0; i < USERS_COUNT; i += BATCH_SIZE) {
     const usersBatch: User[] = [];
-    
+
     for (let j = 0; j < BATCH_SIZE && i + j < USERS_COUNT; j++) {
       const index = i + j + 1;
       const user = userRepository.create({
@@ -45,7 +52,7 @@ async function bootstrap() {
         email: `testuser_k6_${index}_${Date.now()}@example.com`,
         password: defaultPassword,
         nativeLanguage: 'en',
-        gender: 'male',
+        gender: j % 2 === 0 ? 'male' : 'female',
         role: userType.NORMAL_USER,
         isVerified: true, // Bypass verification step
         isActive: true,
@@ -65,10 +72,10 @@ async function bootstrap() {
         gender: savedUser.gender,
         iat: Date.now(),
       };
-      
-      const token = await jwtService.signAsync(payload, { 
-        secret: jwtSecret, 
-        expiresIn: '30d' 
+
+      const token = await jwtService.signAsync(payload, {
+        secret: jwtSecret,
+        expiresIn: '30d',
       });
       k6UsersData.push({ email: savedUser.email, token: token });
     }
@@ -76,7 +83,9 @@ async function bootstrap() {
 
   // Save the array to a JSON file for k6 to use
   fs.writeFileSync('k6-users.json', JSON.stringify(k6UsersData, null, 2));
-  console.log(`Successfully saved ${USERS_COUNT} users to database and tokens to k6-users.json`);
+  console.log(
+    `Successfully saved ${USERS_COUNT} users to database and tokens to k6-users.json`,
+  );
 
   await app.close();
   process.exit(0);

@@ -15,6 +15,7 @@ import { Authgateway } from './chat/ChatAuth.gateway';
 import { RoomManger } from './chat/room-manager.service';
 import { PrivateChatService } from './chat/private-chat.service';
 import { ChatController } from './chat/chat.controller';
+import { Oauth2Module } from './oauth2/oauth2.module';
 
 console.log('MAIN', process.env.NODE_ENV);
 @Module({
@@ -48,11 +49,26 @@ console.log('MAIN', process.env.NODE_ENV);
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const dbUsername = config.get<string>('DB_username');
-        const dbpass = config.get<string>('DB_password');
-        const database = config.get<string>('DB_database');
-        const type = config.get<string>('DB_type');
-        const port = config.get<string>('DB_port');
+        const dbUsername =
+          process.env.NODE_ENV === 'test'
+            ? config.get<string>('DB_username_test')
+            : config.get<string>('DB_username');
+        const dbpass =
+          process.env.NODE_ENV === 'test'
+            ? config.get<string>('DB_password_test')
+            : config.get<string>('DB_password');
+        const database =
+          process.env.NODE_ENV === 'test'
+            ? config.get<string>('DB_database_test')
+            : config.get<string>('DB_database');
+        const type =
+          process.env.NODE_ENV === 'test'
+            ? config.get<string>('DB_type_test')
+            : config.get<string>('DB_type');   
+        const port =
+          process.env.NODE_ENV === 'test'
+            ? config.get<string>('DB_port_test')
+            : config.get<string>('DB_port');
         // console.log('dddddddd', dbUsername, dbpass, database, type, port);
         return {
           database: database,
@@ -72,6 +88,7 @@ console.log('MAIN', process.env.NODE_ENV);
       throttlers: [{ ttl: 10000, limit: 10 }],
     }),
     TypeOrmModule.forFeature([User, PrivateChatRoom, PrivateMessage]),
+    Oauth2Module,
   ],
   controllers: [AppController, ChatController],
   providers: [AppService, Authgateway, RoomManger, PrivateChatService],

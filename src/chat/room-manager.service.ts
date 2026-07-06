@@ -289,6 +289,7 @@ export class RoomManger {
     client: Socket,
     gender: 'male' | 'female',
   ): Promise<RoomData> {
+    console.log('in the assignRoom');
     // 1. إذا كان النظام مشغولاً بطلب آخر، انتظر دورك في الطابور
     if (this.isLocked) {
       await new Promise<void>((resolve) => {

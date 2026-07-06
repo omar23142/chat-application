@@ -49,8 +49,10 @@ export class Authgateway
       matchRoom.id,
     );
     // snapshot at start to avoid stale sockets
-    const females = Array.from(matchRoom.female || []).filter(s => s.connected);
-    const males = Array.from(matchRoom.male || []).filter(s => s.connected);
+    const females = Array.from(matchRoom.female || []).filter(
+      (s) => s.connected,
+    );
+    const males = Array.from(matchRoom.male || []).filter((s) => s.connected);
     console.log(
       '[runSpeedDating] Females:',
       females.length,
@@ -83,20 +85,24 @@ export class Authgateway
       await this.sleep(5 * 1000);
 
       // filter out disconnected before emitting
-      const activeRooms = roomNames.filter(name => {
+      const activeRooms = roomNames.filter((name) => {
         const room = this.RoomMangerService.privateRoom.get(name);
-        return room && Array.from(room.members).some(s => s.connected);
+        return room && Array.from(room.members).some((s) => s.connected);
       });
 
       this.server.to(activeRooms).emit(ServerEvents.ROUND_ENDED, { round });
-      this.server.to(activeRooms).emit(ServerEvents.RATING_PERIOD_STARTED, { round, timeout: 30_000 });
+      this.server
+        .to(activeRooms)
+        .emit(ServerEvents.RATING_PERIOD_STARTED, { round, timeout: 30_000 });
 
       await Promise.all(
         activeRooms.map(
           (name) =>
             new Promise<void>((resolve) => {
               const room = this.RoomMangerService.privateRoom.get(name);
-              const members = room ? Array.from(room.members).filter(s => s.connected) : [];
+              const members = room
+                ? Array.from(room.members).filter((s) => s.connected)
+                : [];
               const timer = setTimeout(() => {
                 members.forEach((u) => {
                   const uid = u.data.user?.id;
@@ -136,10 +142,12 @@ export class Authgateway
       user2Sockets.forEach((sid) =>
         this.server.sockets.sockets.get(sid)?.join(`permanent:${room.id}`),
       );
-      this.server.to(`permanent:${room.id}`).emit(ServerEvents.PERMANENT_ROOM_CREATED, {
-        roomId: room.id,
-        partnerId: m.userId2,
-      });
+      this.server
+        .to(`permanent:${room.id}`)
+        .emit(ServerEvents.PERMANENT_ROOM_CREATED, {
+          roomId: room.id,
+          partnerId: m.userId2,
+        });
     }
     this.RoomMangerService.clearPendingMatches();
     this.server
@@ -180,8 +188,7 @@ export class Authgateway
 
   public handleDisconnect(client: Socket) {
     console.log('[handleDisconnect] Client disconnected:', client.id);
-    // mark as disconnected for rating timeout logic
-    (client as any).disconnected = true;
+    // Socket.IO already manages the disconnected state internally, no need to set it manually.
     const userId = client.data?.user?.id;
     if (userId) {
       this.userService.setOffline(userId, client.id);
@@ -224,7 +231,10 @@ export class Authgateway
         );
       }
     } catch (err) {
-      client.emit('error', { event: 'findMatch', message: (err as Error).message });
+      client.emit('error', {
+        event: 'findMatch',
+        message: (err as Error).message,
+      });
     }
   }
 
@@ -239,9 +249,14 @@ export class Authgateway
       client,
       client.data.user.gender,
     );
+    console.log('#########', room.female?.size, room.male?.size);
     await client.join(`${room.id}`);
     // إشعار للمنضم: تم تخصيص غرفة له
-    client.emit(ServerEvents.ROOM_ASSIGNED, { roomId: room.id });
+    client.emit(ServerEvents.ROOM_ASSIGNED, {
+      roomId: room.id,
+      femal: room.female?.size,
+      male: room.male?.size,
+    });
     // إشعار لبقية أعضاء الغرفة: مستخدم جديد انضم
     client.to(`${room.id}`).emit(ServerEvents.USER_JOINED, {
       roomId: room.id,
@@ -268,13 +283,15 @@ export class Authgateway
         senderId,
         message.text,
       );
-      this.server.to(`permanent:${message.roomId}`).emit(ServerEvents.NEW_MESSAGE, {
-        id: saved.id,
-        roomId: message.roomId,
-        message: message.text,
-        senderId,
-        createdAt: saved.createdAt,
-      });
+      this.server
+        .to(`permanent:${message.roomId}`)
+        .emit(ServerEvents.NEW_MESSAGE, {
+          id: saved.id,
+          roomId: message.roomId,
+          message: message.text,
+          senderId,
+          createdAt: saved.createdAt,
+        });
       return;
     }
 
@@ -300,12 +317,14 @@ export class Authgateway
         readerId,
         data.messageId,
       );
-      this.server.to(`permanent:${data.roomId}`).emit(ServerEvents.READ_RECEIPT, {
-        roomId: data.roomId,
-        messageId: data.messageId,
-        readBy: readerId,
-        readAt: new Date(),
-      });
+      this.server
+        .to(`permanent:${data.roomId}`)
+        .emit(ServerEvents.READ_RECEIPT, {
+          roomId: data.roomId,
+          messageId: data.messageId,
+          readBy: readerId,
+          readAt: new Date(),
+        });
     } catch (err) {
       client.emit('error', {
         event: 'messageRead',

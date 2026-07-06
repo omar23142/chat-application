@@ -1,13 +1,13 @@
 /**
- * اختبار Race Condition (نسخة Node.js) — بديل عن k6 الذي لا يدعم Socket.IO
+ * Race Condition Test (Node.js version) — alternative to k6 which lacks Socket.IO support
  * -----------------------------------------------------------------------
- * ملاحظة: k6 يدعم WebSocket الخام فقط، لكن Socket.IO يضيف بروتوكول engine.io
- * فوقه (HTTP polling → ترقية لـ WebSocket). لذلك كنا نستخدم socket.io-client هنا.
+ * Note: k6 only supports raw WebSocket, but Socket.IO adds the engine.io protocol
+ * on top of it (HTTP polling -> upgrade to WebSocket). That's why we use socket.io-client here.
  *
- * هذا الملف هو نسخة مختصرة. للحصول على الإصدار الكامل بالإحصائيات المفصّلة،
- * استخدم: test/race-condition-test.js
+ * This is a simplified version. For the full version with detailed stats,
+ * use: test/race-condition-test.js
  *
- * التشغيل:
+ * Usage:
  *   npm i -D socket.io-client
  *   node k6-race-condition-test.js
  */
@@ -15,13 +15,13 @@ import { io } from 'socket.io-client';
 import fs from 'node:fs';
 
 const TARGET = 'http://localhost:3001';
-const PARALLEL = 20;
-const TIMEOUT_MS = 8000;
+const PARALLEL = 2000;
+const TIMEOUT_MS = 10000;
 
 const users = JSON.parse(fs.readFileSync('./k6-users.json', 'utf-8')).slice(0, PARALLEL);
 
 const stats = { connected: 0, assigned: 0, errors: 0 };
-const roomCounts = new Map();
+// const roomCounts = new Map();
 let raceDetected = false;
 
 function runOne(user) {
@@ -46,9 +46,10 @@ function runOne(user) {
     socket.on('roomAssigned', (data) => {
       stats.assigned++;
       const rid = typeof data === 'object' ? data.roomId : data;
-      const count = (roomCounts.get(rid) || 0) + 1;
-      roomCounts.set(rid, count);
-      if (count > 5) raceDetected = true;
+      // const count = (roomCounts.get(rid) || 0) + 1;
+      console.log('room_assigned from testtttttttttttttttt', data);
+      // roomCounts.set(rid, count);
+      if (data.femal > 5 || data.male > 5)  raceDetected = true;
       done();
     });
     socket.on('connect_error', () => { stats.errors++; done(); });
@@ -58,13 +59,13 @@ function runOne(user) {
 }
 
 console.log(`🔥 Race condition test with ${PARALLEL} concurrent clients on joinGroupRoom...\n`);
-await Promise.all(users.map(runOne));
+await Promise.all(users.map(runOne));  // run the 2000 user in the same time 
 
-console.log(`متصل: ${stats.connected}, حصل على غرفة: ${stats.assigned}, أخطاء: ${stats.errors}\n`);
-for (const [rid, count] of roomCounts) {
-  const flag = count > 5 ? '🚨 OVERFLOW (race condition!)' : (count === 5 ? '✅ ممتلئة بشكل صحيح' : '');
-  console.log(`  الغرفة ${rid}: ${count} مستخدم  ${flag}`);
-}
+console.log(`Connected: ${stats.connected}, Room Assigned: ${stats.assigned}, Errors: ${stats.errors}\n`);
+// for (const [rid, count] of roomCounts) {
+//   const flag = count > 5 ? '🚨 OVERFLOW (race condition!)' : (count === 5 ? '✅ Properly filled' : '');
+//   console.log(`  Room ${rid}: ${count} users  ${flag}`);
+// }
 
-console.log(raceDetected ? '\n❌ فشل: اكتُشف race condition.' : '\n✅ نجاح: لا race condition.');
+console.log(raceDetected ? '\n❌ Failed: Race condition detected.' : '\n✅ Success: No race condition.');
 process.exit(raceDetected ? 1 : 0);

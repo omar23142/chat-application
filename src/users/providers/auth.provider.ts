@@ -198,4 +198,47 @@ export class AuthProvider {
 
     return `${req.protocol}://${req.get('host')}/api/v1/users/verify-email/${user.id}/${token}`;
   }
+
+   // Add this inside AuthProvider class in src/users/providers/auth.provider.ts
+
+  public async validateOAuthUser(profile: {
+    email: string;
+    userName: string;
+    photo?: string;
+  }) {
+    const { email, userName, photo } = profile;
+
+    // 1. Check if user exists by email
+    let user = await this.userRepo.findOne({ where: { email } });
+
+    if (!user) {
+      // 2. Sign-up: Create a new user (Ensure User.entity allows nullable passwords for OAuth users!)
+      user = this.userRepo.create({
+        email,
+        userName: userName,
+        photo: photo,
+        isVerified: true, // Google already verified their email
+      });
+
+      user = await this.userRepo.save(user);
+    }
+
+    return user;
+  }
+
+  // Reusable method to generate token for any authenticated User (from either Local or OAuth flow)
+  public async generateJwtForUser(user: User) {
+    const payload: JwtPayloadType = {
+      id: user.id,
+      role: user.role,
+      gender: user.gender,
+      iat: Date.now(),
+    };
+
+    const jwtToken = await this.jwtService.signAsync(payload, {
+      secret: this.config.get('jwt_secret_key'),
+    });
+
+    return { accessToken: jwtToken };
+  }
 }
