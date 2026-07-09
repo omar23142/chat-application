@@ -10,7 +10,6 @@ import { isDeepStrictEqual } from 'util';
 
 export class UpdateUserDto {
   @IsEmail()
-  @IsNotEmpty()
   @Length(5, 250)
   @IsOptional()
   email?: string;
@@ -18,16 +17,8 @@ export class UpdateUserDto {
   @Length(2, 150)
   @IsOptional()
   userName?: string;
-  @IsString()
-  @IsNotEmpty()
-  @Length(8, 250)
-  @IsOptional()
-  password?: string;
-  @IsString()
-  @IsNotEmpty()
-  @Length(8, 250)
-  @IsOptional()
-  passwordConf?: string;
+  @IsOptional() @IsString() nativeLanguage?: string;
+  @IsOptional() @IsString() gender?: string;
   @IsUrl()
   @IsOptional()
   photo?: string;

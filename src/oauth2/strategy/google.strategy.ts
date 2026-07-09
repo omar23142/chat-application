@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile } from 'passport';
@@ -12,8 +13,8 @@ import { JwtPayloadType } from 'src/utils/types';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(
     private readonly AuthProvider: AuthProvider,
-    @InjectRepository(User)
-    private readonly UserRepo: Repository<User>,
+    // @InjectRepository(User)
+    // private readonly UserRepo: Repository<User>,
   ) {
     super({
       clientID: process.env.GOOGLE_CLIENTID,
@@ -22,12 +23,18 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['email', 'profile'],
     } as StrategyOptions);
   }
-  public async validate(profile: Profile): Promise<any> {
-    const { emails, username, photos } = profile;
+  public async validate(accessToken, refreshToken, profile: any): Promise<any> {
+    // console.log('profileeeeeeeeeeeeeeee', profile);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const { displayName, emails, photos, _json } = profile;
+    console.log('_json', _json);
     const user = await this.AuthProvider.validateOAuthUser({
-      email: emails && emails.length > 0 ? emails[0].value : '',
-      userName: username ? username : '',
-      photo: photos && photos.length > 0 ? photos[0].value : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      email: emails?.[0]?.value ?? '',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      userName: displayName ?? emails?.[0]?.value?.split('@')[0] ?? '',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      photo: photos?.[0]?.value ?? undefined,
     });
     return user;
   }

@@ -19,6 +19,7 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 //import { ConfigService } from "@nestjs/config";
 import { UpdateUserDto } from './dtos/UpdateUserDto.dto';
+import { ChangPassDto } from './dtos/changePassDto.dto';
 import { AuthProvider } from './providers/auth.provider';
 import { join } from 'path';
 import fs from 'fs';
@@ -89,19 +90,37 @@ export class UserService {
     updated_user.userName = body.userName ?? current_user.userName;
     updated_user.email = body.email ?? current_user.email;
     updated_user.photo = body.photo ?? current_user.photo;
-    if (body.password) {
-      if (body.password !== body.passwordConf)
-        throw new BadRequestException(
-          'the password confirm do not equal to password',
-        );
-      const salt = await bcrypt.genSalt(10);
-      const hashedPass = await bcrypt.hash(body.password, salt);
-      updated_user.password = hashedPass;
-      updated_user.passwordUpdatedAt = new Date(Date.now());
-      console.log('date tesssst : ', new Date(Date.now()));
-    }
+    updated_user.nativeLanguage = body.nativeLanguage ?? current_user.nativeLanguage;
+    updated_user.gender = body.gender ?? current_user.gender;
+    
     await this.userRepo.save(updated_user);
     return updated_user;
+  }
+
+  public async changePassword(body: ChangPassDto, id: number) {
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .where('user.id = :id', { id })
+      .addSelect('user.password')
+      .getOne();
+
+    if (!user) throw new NotFoundException('User not found');
+
+    const isMatch = await bcrypt.compare(body.currentPassword, user.password);
+    if (!isMatch) {
+      throw new BadRequestException('Your current password is incorrect');
+    }
+
+    if (body.newPassword !== body.newPasswordConfirm) {
+      throw new BadRequestException('Password confirmation does not match');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(body.newPassword, salt);
+    user.passwordUpdatedAt = new Date();
+
+    await this.userRepo.save(user);
+    return { message: 'Password updated successfully' };
   }
 
   public async deleteMe(id: number) {

@@ -30,6 +30,7 @@ import * as types from '../utils/types';
 import { Roles } from './decorators/userRole.decorator';
 import { userType } from '../utils/enum';
 import { UpdateUserDto } from './dtos/UpdateUserDto.dto';
+import { ChangPassDto } from './dtos/changePassDto.dto';
 import { User } from './entity/User.entity';
 import { LoggerInterceptor } from '../utils/interceptors/logger.interceptor';
 import type { Response, Express } from 'express';
@@ -74,6 +75,15 @@ export class UsersController {
   ) {
     console.log('this is current user: ', current_user);
     return this.UserService.updateOne(body, current_user.id);
+  }
+
+  @UseGuards(ProtectGard)
+  @Patch('/api/v1/users/change-password')
+  public changePassword(
+    @Body() body: ChangPassDto,
+    @GetCurrentUser() user: User,
+  ) {
+    return this.UserService.changePassword(body, user.id);
   }
 
   @Post('/api/v1/users/auth/signup')

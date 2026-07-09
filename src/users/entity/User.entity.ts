@@ -48,7 +48,7 @@ export class User {
   nativeLanguage: string;
   @Column({
     type: 'varchar',
-    nullable: false, // default: 'en'
+    nullable: false,
   })
   gender: string;
   @CreateDateColumn({ type: 'timestamp', default: () => CURENT_TIME_STAMP })

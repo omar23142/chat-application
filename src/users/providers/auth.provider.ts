@@ -199,7 +199,7 @@ export class AuthProvider {
     return `${req.protocol}://${req.get('host')}/api/v1/users/verify-email/${user.id}/${token}`;
   }
 
-   // Add this inside AuthProvider class in src/users/providers/auth.provider.ts
+  // Add this inside AuthProvider class in src/users/providers/auth.provider.ts
 
   public async validateOAuthUser(profile: {
     email: string;
@@ -212,10 +212,29 @@ export class AuthProvider {
     let user = await this.userRepo.findOne({ where: { email } });
 
     if (!user) {
+      //  If it's a new user, handle Username conflicts
+      let finalUserName = userName || email.split('@')[0];
+
+      // Check if the username is already taken
+      const usernameExists = await this.userRepo.findOne({
+        where: { userName: finalUserName },
+      });
+      if (usernameExists) {
+        // If taken, append a random 4-digit number (e.g., John Doe -> John Doe 4821)
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        console.log('randomsuffixxxxx', randomSuffix);
+        finalUserName = `${finalUserName} ${randomSuffix}`;
+      }
       // 2. Sign-up: Create a new user (Ensure User.entity allows nullable passwords for OAuth users!)
+      const randomPass = randomBytes(32).toString('hex');
+      const salut = await bcrypt.genSalt(10);
+      const hashedPass = await bcrypt.hash(randomPass, salut);
       user = this.userRepo.create({
         email,
-        userName: userName,
+        userName: finalUserName,
+        password: hashedPass,
+        nativeLanguage: 'unknown', // to do in frontend if the profile don't complite (nativelanguage:unknown and gender: unknown) then redirect the user to the edit detailes page
+        gender: 'unknown',
         photo: photo,
         isVerified: true, // Google already verified their email
       });
