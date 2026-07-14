@@ -10,12 +10,12 @@ import {
   RequestTimeoutException,
   forwardRef,
 } from '@nestjs/common';
-import { RejesterDto } from '../dtos/Rejester.dto';
-import { LoginDto } from '../dtos/LoginDto.dto';
+import { RejesterDto } from '../../users/dtos/Rejester.dto';
+import { LoginDto } from '../../users/dtos/LoginDto.dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtPayloadType } from '../../utils/types';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../entity/User.entity';
+import { User } from '../../users/entity/User.entity';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 //import { ConfigService } from "@nestjs/config";
@@ -115,7 +115,6 @@ export class AuthProvider {
     );
     //await this.mailService.sendWelcome(newUser,uploadImageUrl);
     await this.mailService.sendValidationEmail(newUser, verificationUrl);
-
     return {
       newUser,
       //jwtToken,
@@ -241,8 +240,58 @@ export class AuthProvider {
 
       user = await this.userRepo.save(user);
     }
+    // const { password , ...result } = user;
 
     return user;
+  }
+
+  /**
+   * Validate email + password for local login.
+   * Returns the user if credentials are correct, null otherwise.
+   * Called by LocalStrategy.validate().
+   */
+  public async validateLocalUser(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const user = await this.userRepo
+      .createQueryBuilder('user')
+      .where('user.email = :email', { email })
+      .addSelect('user.password')
+      .getOne();
+
+    if (!user) return null;
+
+    const passwordCorrect = await bcrypt.compare(password, user.password);
+    if (!passwordCorrect) return null;
+
+    user.password = '';
+    return user;
+  }
+
+  /**
+   * Handle the sign-in response after Passport validates credentials.
+   * If user is verified → return JWT.
+   * If user is not verified → send verification email and return message.
+   */
+  public async signin(user: User, req: ExpressRequest) {
+    if (!user.isVerified) {
+      let token = user.verificationToken;
+      if (!token) {
+        token = randomBytes(32).toString('hex');
+        user.verificationToken = token;
+        await this.userRepo.save(user);
+      }
+      const verifyUrl = this.generateVerifyUrl(user, token, req);
+      await this.mailService.sendValidationEmail(user, verifyUrl);
+      return {
+        message:
+          'Your email is not verified. A verification email has been sent.',
+      };
+    }
+
+    const accessToken = await this.generateJwtForUser(user);
+    return { accessToken, user };
   }
 
   // Reusable method to generate token for any authenticated User (from either Local or OAuth flow)
@@ -258,6 +307,6 @@ export class AuthProvider {
       secret: this.config.get('jwt_secret_key'),
     });
 
-    return { accessToken: jwtToken };
+    return jwtToken;
   }
 }

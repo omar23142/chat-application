@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Profile } from 'passport';
 import { Strategy, StrategyOptions } from 'passport-google-oauth2';
-import { AuthProvider } from '../../users/providers/auth.provider';
-import { User } from 'src/users/entity/User.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { JwtPayloadType } from 'src/utils/types';
+import { AuthProvider } from '../providers/auth.provider';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
@@ -21,11 +16,16 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       clientSecret: process.env.GOOGLE_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK,
       scope: ['email', 'profile'],
+      prompt: 'select_account',
     } as StrategyOptions);
   }
-  public async validate(accessToken, refreshToken, profile: any): Promise<any> {
+  public async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+  ): Promise<any> {
     // console.log('profileeeeeeeeeeeeeeee', profile);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     const { displayName, emails, photos, _json } = profile;
     console.log('_json', _json);
     const user = await this.AuthProvider.validateOAuthUser({

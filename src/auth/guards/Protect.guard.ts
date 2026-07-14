@@ -9,7 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { CURENT_USER_KEY } from '../../utils/constants';
-import { UserService } from '../User.Service';
+import { UserService } from '../../users/User.Service';
 import { ConfigService } from '@nestjs/config';
 // import { Authconfig } from 'src/config/AuthClass';
 
@@ -39,6 +39,7 @@ export class ProtectGard implements CanActivate {
       id: number;
       iat: number;
       [key: string]: unknown;
+      gender: string;
     }
 
     let payload: JwtPayload;
@@ -53,7 +54,7 @@ export class ProtectGard implements CanActivate {
           secret,
           //ignoreExpiration:true
         });
-        console.log(payload);
+        console.log('decoded jwt', payload);
       } else {
         throw new UnauthorizedException('access denied , no token provided   ');
       }

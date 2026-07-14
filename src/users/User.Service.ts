@@ -20,7 +20,7 @@ import * as bcrypt from 'bcryptjs';
 //import { ConfigService } from "@nestjs/config";
 import { UpdateUserDto } from './dtos/UpdateUserDto.dto';
 import { ChangPassDto } from './dtos/changePassDto.dto';
-import { AuthProvider } from './providers/auth.provider';
+import { AuthProvider } from '../auth/providers/auth.provider';
 import { join } from 'path';
 import fs from 'fs';
 import type { Request as ExpressRequest, Response } from 'express';
@@ -202,6 +202,29 @@ export class UserService {
     await this.userRepo.save(user);
     return {
       message: ' your acount has been verified succussfuly and you can log in ',
+    };
+  }
+
+  /**
+   * Called after local login when user's email is not verified.
+   * Sends a new verification email and returns a message.
+   */
+  public async sendVerificationReminder(userId: number, req: ExpressRequest) {
+    const user = await this.getOne(userId);
+
+    let token = user.verificationToken;
+    if (!token) {
+      token = randomBytes(32).toString('hex');
+      user.verificationToken = token;
+      await this.userRepo.save(user);
+    }
+
+    const verifyUrl = `${req.protocol}://${req.get('host')}/api/v1/users/verify-email/${user.id}/${token}`;
+    await this.MailService.sendValidationEmail(user, verifyUrl);
+
+    return {
+      message:
+        'Your email is not verified. A verification email has been sent.',
     };
   }
   public async ForgetPassword(

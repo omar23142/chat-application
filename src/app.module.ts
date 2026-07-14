@@ -7,7 +7,8 @@ import { UsersModule } from './users/users.module';
 // import { UploadsModule } from './Uploads/Uploads.Module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { User } from './users/entity/User.entity';
 import { PrivateChatRoom } from './chat/entity/PrivateChatRoom.entity';
 import { PrivateMessage } from './chat/entity/PrivateMessage.entity';
@@ -15,7 +16,9 @@ import { Authgateway } from './chat/ChatAuth.gateway';
 import { RoomManger } from './chat/room-manager.service';
 import { PrivateChatService } from './chat/private-chat.service';
 import { ChatController } from './chat/chat.controller';
-import { Oauth2Module } from './oauth2/oauth2.module';
+import { AuthModule } from './auth/auth.module';
+import { PasskeyModule } from './auth/strategy/passkey/passkey.module';
+import { Passkey } from './auth/strategy/passkey/entity/passkey.entity';
 
 console.log('MAIN', process.env.NODE_ENV);
 @Module({
@@ -78,7 +81,7 @@ console.log('MAIN', process.env.NODE_ENV);
           host: 'localhost',
           synchronize: process.env.NODE_ENV !== 'production',
           //dropSchema: true,
-          entities: [User, PrivateChatRoom, PrivateMessage],
+          entities: [User, PrivateChatRoom, PrivateMessage, Passkey],
           port: port,
         } as TypeOrmModuleOptions;
       },
@@ -87,10 +90,17 @@ console.log('MAIN', process.env.NODE_ENV);
     ThrottlerModule.forRoot({
       throttlers: [{ ttl: 10000, limit: 10 }],
     }),
-    TypeOrmModule.forFeature([User, PrivateChatRoom, PrivateMessage]),
-    Oauth2Module,
+    TypeOrmModule.forFeature([User, PrivateChatRoom, PrivateMessage, Passkey]),
+    AuthModule,
+    PasskeyModule,
   ],
   controllers: [AppController, ChatController],
-  providers: [AppService, Authgateway, RoomManger, PrivateChatService],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    AppService,
+    Authgateway,
+    RoomManger,
+    PrivateChatService,
+  ],
 })
 export class AppModule {}

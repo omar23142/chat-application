@@ -13,14 +13,14 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 //import { ConfigService } from "@nestjs/config";
 import { error } from 'console';
 import type { StringValue } from 'ms';
-import { AuthProvider } from './providers/auth.provider';
 import { MulterModule } from '@nestjs/platform-express';
 import { CURENT_USER_KEY } from '../utils/constants';
 import { diskStorage } from 'multer';
 import { MailModule } from '../mail/mail.module';
+import { AuthProvider } from 'src/auth/providers/auth.provider';
 
 @Module({
-  providers: [UserService, AuthProvider, JwtService],
+  providers: [UserService, JwtService, AuthProvider],
   imports: [
     MailModule,
     //forwardRef(() => ReviewModule ),

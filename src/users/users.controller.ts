@@ -22,8 +22,8 @@ import {
 import { UserService } from './User.Service';
 import { RejesterDto } from './dtos/Rejester.dto';
 import { LoginDto } from './dtos/LoginDto.dto';
-import { RestrictToGuard } from './guards/RestrictTo.guard';
-import { ProtectGard } from './guards/Protect.guard';
+import { RestrictToGuard } from '../auth/guards/RestrictTo.guard';
+import { ProtectGard } from '../auth/guards/Protect.guard';
 import { CURENT_USER_KEY } from '../utils/constants';
 import { GetCurrentUser } from './decorators/current-user.decorator';
 import * as types from '../utils/types';
@@ -86,20 +86,7 @@ export class UsersController {
     return this.UserService.changePassword(body, user.id);
   }
 
-  @Post('/api/v1/users/auth/signup')
-  @Throttle({ default: { limit: 3, ttl: 10000 } })
-  public register(@Body() body: RejesterDto, @Request() req: ExpressRequest) {
-    return this.UserService.sigup(body, req);
-  }
-  @Post('/api/v1/users/auth/signin')
-  @Throttle({ default: { limit: 3, ttl: 10000 } })
-  @HttpCode(HttpStatus.OK)
-  public async signin(@Body() body: LoginDto, @Req() req: ExpressRequest) {
-    console.log('in the signin controller', req.protocol);
-    const result = await this.UserService.login(body, req);
-    console.log('Result in Controller:', result);
-    return result;
-  }
+  
 
   //api/v1/users/auth/google/callback
 

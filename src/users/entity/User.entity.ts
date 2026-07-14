@@ -51,6 +51,11 @@ export class User {
     nullable: false,
   })
   gender: string;
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  passkeyChallenge: string | null;
   @CreateDateColumn({ type: 'timestamp', default: () => CURENT_TIME_STAMP })
   createdAt: Date;
   @UpdateDateColumn({

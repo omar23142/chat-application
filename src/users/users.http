@@ -6,7 +6,7 @@ Get http://localhost:3000/api/v1/users/3
 
 ###
 Get http://localhost:3000/api/v1/users/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Ik5PUk1BTF9VU0VSIiwiaWF0IjoxNzY5MTU3NTA0fQ.ZgPxfn3H3nc8aEE6uuWKtMG_Rg3msQEGgdC5mm911r8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Ik5PUk1BTF9VU0VSIiwiZ2VuZGVyIjoibWFsZSIsImlhdCI6MTc4Mzc3ODM4MTk5M30.vgAOB-qIyozQanAwVcwucQbXwfs4N7dYKy6xxfsViZs
 
 
 ### patch update logedin user
@@ -32,12 +32,12 @@ Content-Type: application/json
     //"rating":1
 }
 ###
-Post http://localhost:3000/api/v1/users/auth/signup
+Post http://localhost:3000/api/v1/auth/signup
 Content-Type: application/json
 
 {
-     "userName":"fatema",
-    "email":"fatema@mail.com",
+     "userName":"fatema122",
+    "email":"fatema122@mail.com",
     "password":"123456788",
     "passwordConf":"123456788",
     "photo":"omaralmPhoto.jpg",
@@ -46,11 +46,11 @@ Content-Type: application/json
 }
 
 ###
-Post http://localhost:3000/api/v1/users/auth/signin
+Post http://localhost:3000/api/v1/auth/signin
 Content-Type: application/json
 
 {
-    "email":"omaral@mail.com",
+    "email":"omaralm@mail.com",
     "password":"123456788"
 }
 

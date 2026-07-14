@@ -7,7 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { PrivateChatService } from './private-chat.service';
-import { ProtectGard } from '../users/guards/Protect.guard';
+import { ProtectGard } from '../auth/guards/Protect.guard';
 import { GetCurrentUser } from '../users/decorators/current-user.decorator';
 import { User } from '../users/entity/User.entity';
 
