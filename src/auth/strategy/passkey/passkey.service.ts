@@ -95,7 +95,7 @@ export class PasskeyService {
       // Map and create a new Passkey entity
       const newPasskey = this.passkeyRepo.create({
         user: user, // Link key to the authenticated user
-        credentialId: Buffer.from(id).toString('base64url'), // Convert ID to safe url-base64 format
+        credentialId: id, // It is already a base64url string in SimpleWebAuthn v10
         publicKey: Buffer.from(publicKey), // Store the raw public key bytes
         counter: counter, // Set counter
       });
@@ -212,7 +212,7 @@ export class PasskeyService {
 
       // Generate a JWT since authentication succeeded
       const tokens = await this.authProvider.generateJwtForUser(user);
-      return tokens; // Send JWT tokens to client
+      return { accessToken: tokens }; // Send JWT token wrapped in JSON object to client
     }
 
     throw new BadRequestException('Invalid signature'); // Fallback error
