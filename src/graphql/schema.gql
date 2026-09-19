@@ -1,0 +1,155 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type UserType {
+  """user id"""
+  id: Int!
+
+  """user role"""
+  role: String!
+
+  """user name"""
+  userName: String
+
+  """user email"""
+  email: String!
+
+  """user photo"""
+  photo: String
+
+  """is active"""
+  isActive: Boolean!
+
+  """is verified"""
+  isVerified: Boolean!
+
+  """user native language"""
+  nativeLanguage: String!
+
+  """user gender"""
+  gender: String!
+
+  """acount created at"""
+  createdAt: DateTime!
+
+  """user information updated at"""
+  updatedAt: DateTime!
+
+  """deleted at"""
+  deletedAt: DateTime
+
+  """user state"""
+  isOnline: Boolean!
+
+  """user last seen """
+  lastSeen: DateTime
+  messages(roomId: Int!): messageResponse!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type RoomType {
+  """user id"""
+  id: Int!
+
+  """user id"""
+  maleId: Int!
+
+  """user id"""
+  femaleId: Int!
+
+  """user id"""
+  male: UserType!
+
+  """user id"""
+  female: UserType!
+
+  """user id"""
+  matchedAt: DateTime!
+
+  """user id"""
+  createdAt: DateTime!
+}
+
+type MessageType {
+  id: Int!
+  room: RoomType
+  roomId: Int!
+  sender: UserType
+  senderId: Int!
+  content: String!
+  createdAt: DateTime!
+  readAt: DateTime
+  deletedAt: DateTime
+}
+
+type messageResponse {
+  hasMore: Boolean!
+  nextCursor: DateTime
+  messages: [MessageType!]!
+}
+
+type Query {
+  users: [UserType!]!
+  getOneuser(userid: Int!): UserType!
+  me: UserType!
+  userAgent: String!
+  getmessage(roomId: Int!, userId: Int!): [MessageType!]!
+}
+
+type Mutation {
+  Rejester(userDto: UserDto!): UserType!
+  updateGraphql(updateuserDto: UpdateGraphqlInput!): UserType!
+  removeGraphql(id: Int!): UserType!
+}
+
+input UserDto {
+  """user email"""
+  email: String!
+
+  """user name"""
+  userName: String
+
+  """user password"""
+  password: String!
+
+  """password confirm"""
+  passwordConf: String!
+
+  """user photo"""
+  photo: String!
+
+  """user nativeLanguage"""
+  nativeLanguage: String!
+
+  """user gender"""
+  gender: String!
+}
+
+input UpdateGraphqlInput {
+  """user email"""
+  email: String
+
+  """user name"""
+  userName: String
+
+  """user password"""
+  password: String
+
+  """password confirm"""
+  passwordConf: String
+
+  """user photo"""
+  photo: String
+
+  """user nativeLanguage"""
+  nativeLanguage: String
+
+  """user gender"""
+  gender: String
+  id: Int!
+}

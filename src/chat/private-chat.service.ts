@@ -26,6 +26,15 @@ export class PrivateChatService {
     return this.roomRepo.save(room);
   }
 
+  public async getRoomById(roomId: number) {
+    let room = await this.roomRepo.findOne({ where: { id: roomId }})
+     if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    return room;
+  }
+
   async getRoom(maleId: number, femaleId: number): Promise<PrivateChatRoom | null> {
     return this.roomRepo.findOne({
       where: [
@@ -33,6 +42,13 @@ export class PrivateChatService {
         { maleId: femaleId, femaleId: maleId },
       ],
     });
+  }
+  public getMessages (userId: number) {
+    return this.msgRepo.find({
+      where: [
+        { senderId: userId}
+      ]
+    })
   }
 
   async saveMessage(

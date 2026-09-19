@@ -36,8 +36,8 @@ Post http://localhost:3000/api/v1/auth/signup
 Content-Type: application/json
 
 {
-     "userName":"fatema122",
-    "email":"fatema122@mail.com",
+     "userName":"fatema111",
+    "email":"fatema111@mail.com",
     "password":"123456788",
     "passwordConf":"123456788",
     "photo":"omaralmPhoto.jpg",
@@ -50,7 +50,7 @@ Post http://localhost:3000/api/v1/auth/signin
 Content-Type: application/json
 
 {
-    "email":"omaralm@mail.com",
+    "email":"fatema111@mail.com",
     "password":"123456788"
 }
 

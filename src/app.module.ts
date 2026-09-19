@@ -7,18 +7,17 @@ import { UsersModule } from './users/users.module';
 // import { UploadsModule } from './Uploads/Uploads.Module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { User } from './users/entity/User.entity';
 import { PrivateChatRoom } from './chat/entity/PrivateChatRoom.entity';
 import { PrivateMessage } from './chat/entity/PrivateMessage.entity';
-import { Authgateway } from './chat/ChatAuth.gateway';
-import { RoomManger } from './chat/room-manager.service';
-import { PrivateChatService } from './chat/private-chat.service';
-import { ChatController } from './chat/chat.controller';
+import { ChatModule } from './chat/chat.module';
 import { AuthModule } from './auth/auth.module';
 import { PasskeyModule } from './auth/strategy/passkey/passkey.module';
 import { Passkey } from './auth/strategy/passkey/entity/passkey.entity';
+import { GraphqlModule } from './graphql/graphql.module';
+import { GqlThrottlerGuard } from './graphql/Gards/gql-throttler.guard';
 
 console.log('MAIN', process.env.NODE_ENV);
 @Module({
@@ -32,15 +31,10 @@ console.log('MAIN', process.env.NODE_ENV);
           : '.env',
     }),
     JwtModule.registerAsync({
+      global: true,
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        // console.log('this is test', config.get<string>('JWT_SECRET_KEY'));
-        //  if (!config.get<string>("JWT_EXPIRES_IN"))
-        //      throw new error('the jwt is undifined')
-        //  let x:string = `${config.get<string>("JWT_EXPIRES_IN")}`
-        //  let y:number= parseInt(x)
         return {
-          global: true,
           secret: config.get<string>('JWT_SECRET_KEY'),
           signOptions: {
             expiresIn: config.get<string>('JWT_EXPIRES_IN'),
@@ -93,14 +87,13 @@ console.log('MAIN', process.env.NODE_ENV);
     TypeOrmModule.forFeature([User, PrivateChatRoom, PrivateMessage, Passkey]),
     AuthModule,
     PasskeyModule,
+    ChatModule,
+    GraphqlModule,
   ],
-  controllers: [AppController, ChatController],
+  controllers: [AppController],
   providers: [
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: GqlThrottlerGuard },
     AppService,
-    Authgateway,
-    RoomManger,
-    PrivateChatService,
   ],
 })
 export class AppModule {}

@@ -28,18 +28,17 @@ import { randomBytes, createHash } from 'crypto';
 import { userType } from '../utils/enum';
 import { MailService } from '../mail/mail.service';
 import { ResetPassDtoDto } from './dtos/RessetPassDto.dto';
+import { ConfigService } from '@nestjs/config';
 //import type { Request as ExpressRequest } from "express";
 
 @Injectable()
 export class UserService {
-  // private readonly ReviewsService:ReviewsService;
   constructor(
     //@Inject(forwardRef( () => ReviewsService))
-    //private readonly ReviewsService:ReviewsService,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly authProvider: AuthProvider,
-    //private readonly config:ConfigService,
+    private readonly config:ConfigService,
     private readonly MailService: MailService,
   ) {}
   public getAll() {

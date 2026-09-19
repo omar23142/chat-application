@@ -86,7 +86,9 @@ export class AuthProvider {
     };
     const jwtToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get('jwt_secret_key'),
+      
     });
+    console.log('jjjjjjjjjjj', jwtToken);
     // try {
     // let date = new Date();
     // const host = this.config.get<string>('SMTP_HOST');
@@ -197,8 +199,6 @@ export class AuthProvider {
 
     return `${req.protocol}://${req.get('host')}/api/v1/users/verify-email/${user.id}/${token}`;
   }
-
-  // Add this inside AuthProvider class in src/users/providers/auth.provider.ts
 
   public async validateOAuthUser(profile: {
     email: string;

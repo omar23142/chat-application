@@ -12,17 +12,21 @@ import { CURENT_USER_KEY } from '../../utils/constants';
 import { UserService } from '../../users/User.Service';
 import { ConfigService } from '@nestjs/config';
 import {JwtPayloadType} from '../../utils/types';
+import { GqlExecutionContext } from '@nestjs/graphql';
 // import { Authconfig } from 'src/config/AuthClass';
 
 @Injectable()
-export class ProtectGard implements CanActivate {
+export class GqlProtectGard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
   ) {}
   async canActivate(context: ExecutionContext) {
-    const req: Request = context.switchToHttp().getRequest();
+    // let req: Request = context.switchToHttp().getRequest();
+    let GqlContext  = GqlExecutionContext.create(context);
+    let req:Request  = GqlContext.getContext().req;
+    
     console.log('req.headers', req.headers.authorization);
     // exam the req.cookie have a token
     const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
@@ -36,12 +40,7 @@ export class ProtectGard implements CanActivate {
       const token = authHeader.split(' ')[1];
       console.log('The Token is:', JSON.stringify(token, null, 2));
     }
-    // interface JwtPayload {
-    //   id: number;
-    //   iat: number;
-    //   [key: string]: unknown;
-    //   gender: string;
-    // }
+
 
     let payload: JwtPayloadType;
     try {
