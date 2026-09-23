@@ -17,7 +17,7 @@ import { AuthModule } from './auth/auth.module';
 import { PasskeyModule } from './auth/strategy/passkey/passkey.module';
 import { Passkey } from './auth/strategy/passkey/entity/passkey.entity';
 import { GraphqlModule } from './graphql/graphql.module';
-import { GqlThrottlerGuard } from './graphql/Gards/gql-throttler.guard';
+import { GqlThrottlerGuard } from './graphql/Guards/gql-throttler.guard';
 
 console.log('MAIN', process.env.NODE_ENV);
 @Module({

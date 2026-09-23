@@ -2,20 +2,13 @@
 
 
 import { Resolver, Query, Mutation, Args, Int, Context, ResolveField, Parent } from '@nestjs/graphql';
-import { GraphqlService } from './graphql.service';
 import { UserType } from './entities/user.graphql.entity';
-import { UserDto } from './dto/userDto';
-import { UpdateGraphqlInput } from './dto/update-graphql.input';
 import { UserService } from 'src/users/User.Service';
 // import { MessageType } from './entities/message.graphql.entity';
 import { PrivateChatService } from 'src/chat/private-chat.service';
-import { messageResponse } from './entities/messageResponse.graphql';
-import type { Request } from 'express';
-import { ProtectGard } from 'src/auth/guards/Protect.guard';
 import { UseGuards } from '@nestjs/common';
-import { GqlProtectGard } from './Gards/gql-protect.guard';
-import {GqlRestrictGard} from './Gards/gql-RestrictTo.guard';
-import {GetGqlCurrentUser} from './decorators/current-user.decorator';
+import { GqlProtectGard } from './Guards/gql-protect.guard';
+import {GqlRestrictGard} from './Guards/gql-RestrictTo.guard';
 import { Roles } from './decorators/userRole.decorator';
 import { userType } from 'src/utils/enum';
 import { MessageType } from './entities/message.graphql.entity';
@@ -37,7 +30,7 @@ export class MessageResolver {
         let message =  await this.chatService.getHistory(roomId, userId);
         // console.log('mmmmmmmmmmmmmmmmmmmmmmmmmmmmm', message.messages);
         return message.messages;
-    }
+    };
 
 
 //  @ResolveField(() => UserType, { nullable: true })

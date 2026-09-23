@@ -16,7 +16,7 @@ export class MailService {
     try {
       const firstName = user.userName.split(' ')[0];
       console.log(firstName);
-      await this.mailerService.sendMail({
+      let res = await this.mailerService.sendMail({
         to: user.email,
         from: `suportTeam@mail.com`,
         subject,
@@ -27,6 +27,7 @@ export class MailService {
           url,
         },
       });
+      // console.log('resssssssssss', res);
     } catch (err) {
       console.log(err);
       throw new RequestTimeoutException(

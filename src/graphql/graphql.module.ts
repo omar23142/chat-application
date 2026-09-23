@@ -14,6 +14,8 @@ import { messageResponse } from './entities/messageResponse.graphql';
 import { MessageResolver } from './message.Resolver';
 import { DataLoaderService } from './DataLoader.service';
 import { PrivateChatRoom } from 'src/chat/entity/PrivateChatRoom.entity';
+import { APP_FILTER } from '@nestjs/core';
+import { GqlGlobalExceptionFilter } from './filters/gql-global-exception.filter';
 
 @Module({
    imports: [
@@ -40,6 +42,12 @@ import { PrivateChatRoom } from 'src/chat/entity/PrivateChatRoom.entity';
   // }),
 
   ],
-  providers: [USERResolver, MessageResolver, GraphqlService, DataLoaderService],
+  providers: [
+    USERResolver,
+    MessageResolver,
+    GraphqlService,
+    DataLoaderService,
+    { provide: APP_FILTER, useClass: GqlGlobalExceptionFilter },
+  ],
 })
 export class GraphqlModule {}

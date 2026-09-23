@@ -1,66 +1,173 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  Logger,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
 
-@Catch() // يمسك بجميع الأخطاء بدون استثناء
-export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+    import {
+      ExceptionFilter,
+      Catch,
+      ArgumentsHost,
+      HttpException,
+      HttpStatus,
+      Logger,
+    } from '@nestjs/common';
+    import { Request, Response } from 'express';
+    import { QueryFailedError } from 'typeorm';
 
-  catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-    const request = ctx.getRequest<Request>();
+    @Catch()
+    export class GlobalExceptionFilter implements ExceptionFilter {
+      private readonly logger = new Logger(GlobalExceptionFilter.name);
 
-    let status: number;
-    let message: string | object;
-    let isOperational = false;
+      catch(exception: any, host: ArgumentsHost) {
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse<Response>();
+        const request = ctx.getRequest<Request>();
 
-    // 1. التمييز بين الأخطاء التشغيلية وغير التشغيلية
-    if (exception instanceof HttpException) {
-      // أخطاء تشغيلية معروفة (Operational Errors)
-      status = exception.getStatus();
-      message = exception.getResponse();
-      isOperational = true;
-    } else {
-      // أخطاء غير تشغيلية (Non-Operational / Bugs)
-      status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = 'internal server error';
-      isOperational = false;
+        // Skip if not HTTP (e.g. GraphQL or WebSockets)
+        if (!response || typeof response.status !== 'function') return;
+
+        // 1. Only pass the exception — the function returns status, message, and isOperational
+        const { statusCode, message, isOperational } = this.normalizeError(exception);
+
+        // 2. Log based on severity
+        if (isOperational) {
+          this.logger.warn(`[${request.method} ${request.url}] ${JSON.stringify(message)}`);
+        } else {
+          this.logger.error(`CRITICAL [${request.method} ${request.url}]`, exception?.stack);
+        }
+
+        // 3. Environment check
+        const isDev = process.env.NODE_ENV === 'development';
+
+        if (isDev) {
+          return response.status(statusCode).json({
+            success: false,
+            statusCode,
+            message,
+            error: exception,
+            stack: exception?.stack,
+          });
+        }
+
+        // Production response (Clean & Safe)
+        return response.status(statusCode).json({
+          success: false,
+          statusCode,
+          message: isOperational ? message : 'Something went wrong, please try again later',
+        });
+      }
+
+      private normalizeError(err: any): { statusCode: number; message: any; isOperational: boolean } {
+        // A. NestJS Built-in HttpExceptions (e.g. BadRequestException, NotFoundException)
+        if (err instanceof HttpException) {
+          return {
+            statusCode: err.getStatus(),
+            message: err.getResponse(),
+            isOperational: true,
+          };
+        }
+
+        // B. TypeORM / PostgreSQL Database Errors
+        if (err instanceof QueryFailedError) {
+          const dbError = err as any;
+
+          switch (dbError.code) {
+            case '23505': // Unique constraint violation (duplicate key)
+              return {
+                statusCode: HttpStatus.CONFLICT,
+                message: dbError.detail || 'A record with this value already exists',
+                isOperational: true,
+              };
+            case '23503': // Foreign key violation
+              return {
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'Referenced entity does not exist',
+                isOperational: true,
+              };
+            case '22P02': // Invalid data type syntax (e.g. invalid UUID format)
+              return {
+                statusCode: HttpStatus.BAD_REQUEST,
+                message: 'Invalid input syntax or ID format',
+                isOperational: true,
+              };
+            default:
+              return {
+                statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+                message: 'Database query failed',
+                isOperational: false,
+              };
+          }
+        }
+
+        // C. Any other unhandled/programming error
+        return {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          message: 'Internal server error',
+          isOperational: false,
+        };
+      }
     }
 
-    // 2. التعامل المخصص بناءً على نوع الخطأ
-    if (isOperational) {
-      // تسجيل خفيف للخطأ التشغيلي لأن السلوك متوقع
-      this.logger.warn(
-        `Operational Error [${request.method} ${request.url}]: ${JSON.stringify(message)}`,
-      );
-    } else {
-      // تسجيل عالي الأهمية (Critical Log) للأخطاء البرمجية المباغتة مع الـ Stack Trace
-      this.logger.error(
-        `CRITICAL Non-Operational Error [${request.method} ${request.url}]`,
-        exception instanceof Error ? exception.stack : exception,
-      );
 
-      // 💡 هنا يمكنك إرسال التنبيه فوراً لأدوات المراقبة مثل Sentry أو Datadog
-      // Sentry.captureException(exception);
-    }
 
-    // 3. إرجاع رد آمن وموحد للعميل دون كشف تفاصيل الكود الحساسة في الأخطاء غير التشغيلية
-    response.status(status).json({
-      success: false,
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      error: typeof message === 'object' ? message : { message },
-    });
-  }
-}
+
+
+
+
+// import {
+//   ExceptionFilter,
+//   Catch,
+//   ArgumentsHost,
+//   HttpException,
+//   HttpStatus,
+//   Logger,
+// } from '@nestjs/common';
+// import { Request, Response } from 'express';
+
+// @Catch() // يمسك بجميع الأخطاء بدون استثناء
+// export class GlobalExceptionFilter implements ExceptionFilter {
+//   private readonly logger = new Logger(GlobalExceptionFilter.name);
+
+//   catch(exception: unknown, host: ArgumentsHost) {
+//     const ctx = host.switchToHttp();
+//     const response = ctx.getResponse<Response>();
+//     const request = ctx.getRequest<Request>();
+
+//     // Skip if not HTTP context (GraphQL is handled by GqlGlobalExceptionFilter)
+//     if (!request || !response) {
+//       return;
+//     }
+
+//     let status: number;
+//     let message: string | object;
+//     let isOperational = false;
+
+//     if (exception instanceof HttpException) {
+//       status = exception.getStatus();
+//       message = exception.getResponse();
+//       isOperational = true;
+//     } else {
+//       status = HttpStatus.INTERNAL_SERVER_ERROR;
+//       message = 'internal server error';
+//       isOperational = false;
+//     }
+
+//     if (isOperational) {
+//       this.logger.warn(
+//         `Operational Error [${request.method} ${request.url}]: ${JSON.stringify(message)}`,
+//       );
+//     } else {
+//       this.logger.error(
+//         `CRITICAL Non-Operational Error [${request.method} ${request.url}]`,
+//         exception instanceof Error ? exception.stack : exception,
+//       );
+//     }
+
+//     response.status(status).json({
+//       success: false,
+//       statusCode: status,
+//       timestamp: new Date().toISOString(),
+//       path: request.url,
+//       error: typeof message === 'object' ? message : { message },
+//     });
+//   }
+// }
 // dealing with error automatically without human dealing 
 //1. إعادة المحاولة التلقائية مع التأخير (Automatic Retry with Exponential Backoff)
 //2. نمط قاطع الدائرة (Circuit Breaker Pattern)

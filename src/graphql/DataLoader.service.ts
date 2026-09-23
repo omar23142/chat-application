@@ -18,7 +18,7 @@ export class DataLoaderService {
 
   // ┌──────────────────────────────────────────────┐
   // │ DataLoader for Users                         │
-  // │ يجمع كل senderIds → query واحد → يرتبهم     │
+  // │ يجمع كل senderIds→ query واحد → يرتبهم     │
   // └──────────────────────────────────────────────┘
   private readonly userLoader = new DataLoader<number, User>(
     async (ids: readonly number[]) => {

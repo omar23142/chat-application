@@ -5,26 +5,26 @@ import { RoomType } from './room.graphql.entity';
 @ObjectType()
 export class MessageType {
   @Field(() => Int)
-  id: number;
+  id!: number;
   @Field(() => RoomType , {nullable: true})
-  room: RoomType;
+  room!: RoomType;
   @Field(() => Int)
-  roomId: number;
+  roomId!: number;
   @Field(() => UserType , {nullable: true})
-  sender: UserType;
+  sender!: UserType;
   @Field(() => Int)
-  senderId: number;
+  senderId!: number;
 
   @Field()
-  content: string;
+  content!: string;
 
   @Field(() => Date)
-  createdAt: Date;
+  createdAt!: Date;
 
   @Field(() => Date, {nullable: true})
-  readAt: Date | null;
+  readAt?: Date | null;
 
   @Field(() => Date, {nullable: true})
-  deletedAt: Date | null;
+  deletedAt?: Date | null;
   
 }

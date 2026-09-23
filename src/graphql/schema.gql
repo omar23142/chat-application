@@ -93,6 +93,11 @@ type messageResponse {
   messages: [MessageType!]!
 }
 
+type MutationResult {
+  statue: Int!
+  message: String!
+}
+
 type Query {
   users: [UserType!]!
   getOneuser(userid: Int!): UserType!
@@ -103,8 +108,11 @@ type Query {
 
 type Mutation {
   Rejester(userDto: UserDto!): UserType!
-  updateGraphql(updateuserDto: UpdateGraphqlInput!): UserType!
-  removeGraphql(id: Int!): UserType!
+  updateUser(updateuserDto: UpdateUserDto!): UserType!
+  DeleteMe(id: Int!): UserType!
+  changepass(updateDto: ChangPassDto!): MutationResult!
+  forgetPassword(email: String, userName: String): MutationResult!
+  resetPassword(input: ResetPasswordInput!): MutationResult!
 }
 
 input UserDto {
@@ -130,18 +138,12 @@ input UserDto {
   gender: String!
 }
 
-input UpdateGraphqlInput {
+input UpdateUserDto {
   """user email"""
   email: String
 
   """user name"""
   userName: String
-
-  """user password"""
-  password: String
-
-  """password confirm"""
-  passwordConf: String
 
   """user photo"""
   photo: String
@@ -151,5 +153,16 @@ input UpdateGraphqlInput {
 
   """user gender"""
   gender: String
-  id: Int!
+}
+
+input ChangPassDto {
+  currentPassword: String!
+  newPassword: String!
+  newPasswordConfirm: String!
+}
+
+input ResetPasswordInput {
+  token: String!
+  newPassword: String!
+  passwordConf: String!
 }
