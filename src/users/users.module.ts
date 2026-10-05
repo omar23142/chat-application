@@ -19,6 +19,7 @@ import { diskStorage } from 'multer';
 import { MailModule } from '../mail/mail.module';
 import { AuthProvider } from 'src/auth/providers/auth.provider';
 
+
 @Module({
   providers: [UserService, JwtService, AuthProvider],
   imports: [

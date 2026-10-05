@@ -23,25 +23,20 @@ export class ProtectGard implements CanActivate {
   ) {}
   async canActivate(context: ExecutionContext) {
     const req: Request = context.switchToHttp().getRequest();
-    console.log('req.headers', req.headers.authorization);
+    // console.log('req.headers', req.headers.authorization);
     // exam the req.cookie have a token
     const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
-    console.log(type);
-    console.log('this is jwt test: ', jwtToken);
-    console.log(
-      `Authorization: ${JSON.stringify(req.headers.authorization, null, 2)}`,
-    );
+    // console.log(type);
+    // console.log('this is jwt test: ', jwtToken);
+    // console.log(
+    //   `Authorization: ${JSON.stringify(req.headers.authorization, null, 2)}`,
+    // );
     const authHeader = req.headers.authorization; // "Bearer eyJhbGci..."
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      console.log('The Token is:', JSON.stringify(token, null, 2));
+      // console.log('The Token is:', JSON.stringify(token, null, 2));
     }
-    // interface JwtPayload {
-    //   id: number;
-    //   iat: number;
-    //   [key: string]: unknown;
-    //   gender: string;
-    // }
+    
 
     let payload: JwtPayloadType;
     try {
@@ -55,7 +50,7 @@ export class ProtectGard implements CanActivate {
           secret,
           //ignoreExpiration:true
         });
-        console.log('decoded jwt', payload);
+        // console.log('decoded jwt', payload);
       } else {
         throw new UnauthorizedException('access denied , no token provided   ');
       }
@@ -71,7 +66,10 @@ export class ProtectGard implements CanActivate {
     // exam if the password not modyfied after the jwt token is issued
     if (currentUser.passwordUpdatedAt) {
       const jwtIat = payload.iat * 1000; // seconds
+      // console.log(currentUser.passwordUpdatedAt)
       const pwdChanged = currentUser.passwordUpdatedAt.getTime();
+       
+      // console.log('teimeeeeeeeee', pwdChanged, jwtIat);
       if (jwtIat < pwdChanged) {
         throw new UnauthorizedException('Token invalid due to password change');
       }

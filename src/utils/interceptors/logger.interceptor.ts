@@ -7,8 +7,10 @@ export class LoggerInterceptor implements NestInterceptor {
       console.log('before route handler')
 
       return next.handle().pipe( map((res)=> {
-        const  {password, ...otherData} = res
-        console.log('after route handler', otherData);
+        const  {password, ResetPassToken ,verificationToken, ...otherData} = res
+        console.log('after route handler',
+          //  otherData
+          );
         return otherData;
     }
     ))

@@ -9,8 +9,9 @@ export class LoggerMiddlware implements NestMiddleware {
             host:req.host,
             url:req.url,
            // headers:req.headers,
-            methode:req.method
-        })
+            methode:req.method,
+            
+        },'in the middelwareeeeeeeeeeeeeeeee')
         next();
     }
     

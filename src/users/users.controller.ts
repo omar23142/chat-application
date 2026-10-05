@@ -43,8 +43,13 @@ import { imageUploadDto } from './dtos/image-upload-DTO.dto';
 import { ApiSecurity, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { throttle } from 'rxjs';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserCacheInterceptor } from './interceptors/UserCash.interceptor';
+
 
 @Controller()
+@CacheTTL(3000)
 export class UsersController {
   private readonly UserService: UserService;
   private readonly loger;
@@ -56,16 +61,29 @@ export class UsersController {
   @Get('/api/v1/users')
   @Roles(userType.ADMIN, userType.NORMAL_USER)
   @UseGuards(ProtectGard, RestrictToGuard)
-  @UseInterceptors(ClassSerializerInterceptor)
-  public getAllUsers() {
-    return this.UserService.getAll();
+  @UseInterceptors(
+    // CacheInterceptor,
+     ClassSerializerInterceptor, 
+       //use cachInteceptor for auto cach the data and if the data are cached then will returned without enter to routehandler
+  ) 
+  @CacheTTL(30000)
+  public async getAllUsers() {
+    console.log('in the  userControuler handler',);
+    let users = await this.UserService.getAll();
+    return users;
   }
   @Get('/api/v1/users/me')
-  @UseInterceptors(LoggerInterceptor)
   @UseGuards(ProtectGard)
-  public getMe(@GetCurrentUser() payload: User) {
+  @UseInterceptors(LoggerInterceptor,
+     UserCacheInterceptor
+    )
+    @CacheTTL(60000)
+  
+  public async  getMe(@GetCurrentUser() payload: User) {
     console.log('in the routeHandler');
-    return this.UserService.getOne(payload.id);
+    let user = await this.UserService.getOne(payload.id)
+     return user; 
+    // return this.UserService.getOne(payload.id);
   }
   @UseGuards(ProtectGard)
   @Patch('/api/v1/users/updateMe')

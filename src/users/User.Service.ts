@@ -9,7 +9,7 @@ import {
   Request,
   Res,
   forwardRef,
-} from '@nestjs/common';
+} from '@nestjs/common'; 
 //import { ReviewsService } from "../reviews/reviews.service";
 import { RejesterDto } from './dtos/Rejester.dto';
 import { LoginDto } from './dtos/LoginDto.dto';
@@ -29,6 +29,8 @@ import { userType } from '../utils/enum';
 import { MailService } from '../mail/mail.service';
 import { ResetPassDtoDto } from './dtos/RessetPassDto.dto';
 import { ConfigService } from '@nestjs/config';
+import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
+import { instanceToPlain } from 'class-transformer';
 //import type { Request as ExpressRequest } from "express";
 
 @Injectable()
@@ -38,11 +40,28 @@ export class UserService {
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly authProvider: AuthProvider,
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache, 
     private readonly config:ConfigService,
     private readonly MailService: MailService,
   ) {}
-  public getAll() {
-    return this.userRepo.find();
+  public async getAll() {
+    // wrap تقوم بالبحث في L1 ثم L2 ثم Database
+    // وعندما تجد البيانات في L2 (Redis) تقوم تلقائياً بـ Mirroring/Backfill إلى L1 (RAM)
+    let cachKey = `users`;
+    return this.cacheManager.wrap(
+      cachKey,
+      async () => {
+        // هذه الدالة لن تُنفذ إلا إذا كانت البيانات مفقودة من L1 و L2 معاً
+        let users =   await this.userRepo.find();
+        users.map((u)=> {
+          u.password = '';
+          u.ResetPassToken = '';
+          u.verificationToken = ''} );
+        return users;
+      },
+      30000, // TTL بالمللي ثانية
+    );
   }
 
   /**
@@ -74,12 +93,25 @@ export class UserService {
     return this.authProvider.login(LoginDto, req);
   }
 
-  public async getOne(id: number, email?: string | null) {
-    const current_user = await this.userRepo.findOneBy({ id });
+  public async getOne(id: number, email?: string | null)  {
+    
+    // const cachedUser:User | undefined = await this.cacheManager.get(`${id}`);
+    // if (cachedUser) {
+    //   console.log('in the route handler value from cachedUser' );
+    //   return cachedUser;
+    // }
+
+      const current_user = await this.userRepo.findOneBy({ id }); 
 
     if (!current_user) throw new NotFoundException('user not found');
+    // await this.cacheManager.set(`${id}`, current_user, 1000 * 30);
+    console.log('in the getOne function value from database');
     return current_user;
+
+  
   }
+  
+   
 
   public async updateOne(body: UpdateUserDto, id: number) {
     const current_user = await this.userRepo.findOne({ where: { id: id } });
@@ -92,7 +124,10 @@ export class UserService {
     updated_user.nativeLanguage = body.nativeLanguage ?? current_user.nativeLanguage;
     updated_user.gender = body.gender ?? current_user.gender;
     
-    await this.userRepo.save(updated_user);
+    // await this.userRepo.save(updated_user);
+    // let cachekey = `$/api/v1/users/me:${current_user.id}`;
+    // await this.cacheManager.del(cachekey);
+    this.deleteCachedUser(updated_user.id);
     return updated_user;
   }
 
@@ -119,6 +154,7 @@ export class UserService {
     user.passwordUpdatedAt = new Date();
 
     await this.userRepo.save(user);
+    await this.deleteCachedUser(user.id);
     return { message: 'Password updated successfully' };
   }
 
@@ -129,6 +165,8 @@ export class UserService {
         'you are not allowed to do this(user does not exist) ',
       );
     await this.userRepo.remove(current_user);
+    let cachekey = `$/api/v1/users/me:${current_user.id}`;
+    await this.cacheManager.del(cachekey);
     return 'user is deleted successfuly';
   }
   public async IsUserExist(UserId: number) {
@@ -158,12 +196,13 @@ export class UserService {
     await this.IsUserExist(user.id);
     user.photo = ImageUrl;
     await this.userRepo.save(user);
+    await this.deleteCachedUser(user.id);
     return user;
   }
 
   public async RemoveUserImage(userId: number) {
     const user = await this.getOne(userId);
-    if (user.photo === null)
+    if (!user?.photo)
       throw new BadRequestException('there is no photo for this user');
     await this.deleteImageFile(user.photo);
     return this.userRepo.update(userId, { photo: null });
@@ -188,17 +227,18 @@ export class UserService {
 
   public async VerifyEmail(userId: number, verifycationEmail: string) {
     const user = await this.getOne(userId);
-    if (user.verificationToken === null)
+    if (user?.verificationToken === null)
       throw new NotFoundException(
         'there is no verification token for this user',
       );
     // console.log('from email',verifycationEmail)
     // console.log('from database', user.verificationToken)
-    if (verifycationEmail !== user.verificationToken)
+    if (verifycationEmail !== user?.verificationToken)
       throw new BadRequestException('the verification token is not valid ');
     user.verificationToken = null;
     user.isVerified = true;
     await this.userRepo.save(user);
+    await this.deleteCachedUser(user.id);
     return {
       message: ' your acount has been verified succussfuly and you can log in ',
     };
@@ -209,7 +249,8 @@ export class UserService {
    * Sends a new verification email and returns a message.
    */
   public async sendVerificationReminder(userId: number, req: ExpressRequest) {
-    const user = await this.getOne(userId);
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('user not found');
 
     let token = user.verificationToken;
     if (!token) {
@@ -289,6 +330,7 @@ export class UserService {
       user.ResetPassToken = null;
       user.ResetPassTokenExpires = null;
       await this.userRepo.save(user);
+      await this.deleteCachedUser(user.id);
       throw new BadRequestException(
         'invalid token or the token has been expired',
       );
@@ -304,6 +346,7 @@ export class UserService {
     user.ResetPassTokenExpires = null;
     user.passwordUpdatedAt = new Date();
     const resault = await this.userRepo.save(user);
+    await this.deleteCachedUser(user.id);
     return 'your password has changed succussfuly, and you can login';
   }
 
@@ -313,6 +356,7 @@ export class UserService {
       socketId,
       lastSeen: null,
     });
+    await this.deleteCachedUser(userId);
   }
 
   async setOffline(userId: number, socketId: string): Promise<void> {
@@ -323,6 +367,7 @@ export class UserService {
         socketId: null,
         lastSeen: new Date(),
       });
+      await this.deleteCachedUser(userId);
     }
   }
 
@@ -352,4 +397,10 @@ export class UserService {
     }
     return [];
   }
+
+  private  async deleteCachedUser(userId: number) {
+let cachekey = `$/api/v1/users/me:${userId}`;
+    await this.cacheManager.del(cachekey);
+    await this.cacheManager.del('users'); 
+  };
 }

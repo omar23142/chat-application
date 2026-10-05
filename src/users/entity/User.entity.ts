@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { CURENT_TIME_STAMP } from '../../utils/constants';
 import { userType } from '../../utils/enum';
 import {
@@ -16,64 +16,67 @@ import {
 @Entity('Users')
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
   @Column({ type: 'enum', enum: userType, default: userType.NORMAL_USER })
-  role: string;
+  role!: string;
   @Column({ type: 'varchar', length: 150, nullable: true, unique: true })
-  userName: string;
+  userName!: string;
   @Column({ type: 'varchar', length: 250, nullable: false, unique: true })
-  email: string;
+  email!: string;
   @Column({ nullable: false, select: true })
   @Exclude()
-  password: string;
+  password!: string;
 
   @Column({ type: 'varchar', nullable: true, default: null })
-  photo: string | null;
+  photo!: string | null;
   @Column({ default: true })
-  isActive: boolean;
+  isActive!: boolean;
   @Column({ default: false })
-  isVerified: boolean;
+  isVerified!: boolean;
   @Column({ type: 'varchar', nullable: true, default: null })
-  verificationToken: string | null;
+  verificationToken?: string | null;
   @Column({ type: 'varchar', nullable: true, default: null })
-  ResetPassToken: string | null;
+  ResetPassToken?: string | null;
   @Column({ type: 'timestamptz', nullable: true, default: null })
-  ResetPassTokenExpires: Date | null;
+  ResetPassTokenExpires?: Date | null;
   @Column({ type: 'timestamptz', nullable: true, default: null })
-  passwordUpdatedAt: Date | null;
+  passwordUpdatedAt?: Date | null;
   @Column({
     type: 'varchar',
     nullable: false, //default: 'ar'
   })
-  nativeLanguage: string;
+  nativeLanguage!: string;
   @Column({
     type: 'varchar',
     nullable: false,
   })
-  gender: string;
+  gender!: string;
   @Column({
     type: 'varchar',
     nullable: true,
   })
-  passkeyChallenge: string | null;
+  passkeyChallenge?: string | null;
+  @Expose()
   @CreateDateColumn({ type: 'timestamp', default: () => CURENT_TIME_STAMP })
-  createdAt: Date;
+  createdAt!: Date;
+  @Expose()
+  @Type(() => Date)
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => CURENT_TIME_STAMP,
     onUpdate: CURENT_TIME_STAMP,
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Column({ type: 'boolean', default: false })
-  isOnline: boolean;
+  isOnline!: boolean;
 
   @Column({ type: 'varchar', nullable: true })
-  socketId: string | null;
+  socketId?: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  lastSeen: Date | null;
+  lastSeen?: Date | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  deletedAt: Date | null;
+  deletedAt?: Date | null;
 }

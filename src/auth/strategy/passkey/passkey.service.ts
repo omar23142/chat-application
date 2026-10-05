@@ -74,9 +74,10 @@ export class PasskeyService {
         expectedOrigin: this.origin, // Verify origin matches the client's URL
         expectedRPID: this.rpID, // Verify Reliance Party ID matches
       });
-    } catch (error) {
+    } catch (error: unknown) {
       throw new BadRequestException(
-        'WebAuthn verification failed: ' + error.message,
+        'WebAuthn verification failed: ' +
+          (error instanceof Error ? error.message : String(error)),
       ); // Handle
     }
 
@@ -195,8 +196,11 @@ export class PasskeyService {
           counter: passkey.counter, // Stored clone counter
         },
       });
-    } catch (error) {
-      throw new BadRequestException('Authentication failed: ' + error.message);
+    } catch (error: unknown) {
+      throw new BadRequestException(
+        'Authentication failed: ' +
+          (error instanceof Error ? error.message : String(error)),
+      );
     }
 
     const { verified, authenticationInfo } = verification; // Destructure verify outputs
