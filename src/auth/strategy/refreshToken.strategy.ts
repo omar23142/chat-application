@@ -25,17 +25,17 @@ export class RefreshToken extends PassportStrategy(Strategy, 'refreshToken') {
                 super({
         // jwtFromRequest:ExtractJwt.fromAuthHeaderAsBearerToken() 
         jwtFromRequest: (req) => {
-            if (req && req.cookies)
-                {
-                    console.log('token from cookies',req.cookies['RefreshToken']);
-                    return req.cookies['RefreshToken']
-                }
-            else if(!ExtractJwt.fromAuthHeaderAsBearerToken()(req)?.match('{}'))
-               { 
-                console.log('token from header', ExtractJwt.fromAuthHeaderAsBearerToken());
-                 return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
-                }
-            return null;
+            // if (req && req.cookies)
+            //     {
+            //         console.log('token from cookies',req.cookies['RefreshToken']);
+            //         return req.cookies['RefreshToken']
+            //     }
+            // else if(!ExtractJwt.fromAuthHeaderAsBearerToken()(req)?.match('{}'))
+            //    { 
+            //     console.log('token from header', ExtractJwt.fromAuthHeaderAsBearerToken());
+            //      return ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+            //     }
+            return req.cookies?.['RefreshToken'] ?? ExtractJwt.fromAuthHeaderAsBearerToken()(req);
         },
         secretOrKey: config.get('Refresh_JWT_SECRET_KEY'),
         ignoreExpiration: false,
