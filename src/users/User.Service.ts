@@ -155,6 +155,8 @@ export class UserService {
 
     await this.userRepo.save(user);
     await this.deleteCachedUser(user.id);
+    await this.authProvider.IncrementAccessTokenVersion(user);
+    await this.authProvider.logOut(user);
     return { message: 'Password updated successfully' };
   }
 
@@ -344,7 +346,10 @@ export class UserService {
 
     user.ResetPassToken = null;
     user.ResetPassTokenExpires = null;
+    user.refreshToken = null;
     user.passwordUpdatedAt = new Date();
+    await this.authProvider.IncrementAccessTokenVersion(user);
+    await this.authProvider.logOut(user);
     const resault = await this.userRepo.save(user);
     await this.deleteCachedUser(user.id);
     return 'your password has changed succussfuly, and you can login';

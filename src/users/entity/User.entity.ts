@@ -27,6 +27,14 @@ export class User {
   @Exclude()
   password!: string;
 
+  @Column({type: 'int', default: 1})
+  @Exclude()
+  accessTokenVersion!: number;
+
+  @Column({ type: 'varchar', nullable: true, select: true })
+  @Exclude()
+  refreshToken!: string | null;
+  
   @Column({ type: 'varchar', nullable: true, default: null })
   photo!: string | null;
   @Column({ default: true })

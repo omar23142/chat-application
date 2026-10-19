@@ -9,15 +9,18 @@ import { PrivateChatService } from './private-chat.service';
 import { RoomManger } from './room-manager.service';
 import { Authgateway } from './ChatAuth.gateway';
 import { JwtModule } from '@nestjs/jwt';
+import { AuthProvider } from 'src/auth/providers/auth.provider';
+import { MailService } from 'src/mail/mail.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([PrivateChatRoom, PrivateMessage, User]),
     UsersModule,
     JwtModule,
+    
   ],
   controllers: [ChatController],
-  providers: [PrivateChatService, RoomManger, Authgateway],
+  providers: [PrivateChatService, RoomManger, Authgateway, AuthProvider, MailService],
   exports: [PrivateChatService],
 })
 export class ChatModule {}

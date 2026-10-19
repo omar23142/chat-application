@@ -11,7 +11,6 @@ import {
   Param,
   Patch,
   Post,
-  Request,
   Req,
   Res,
   UploadedFile,
@@ -33,7 +32,7 @@ import { UpdateUserDto } from './dtos/UpdateUserDto.dto';
 import { ChangPassDto } from './dtos/changePassDto.dto';
 import { User } from './entity/User.entity';
 import { LoggerInterceptor } from '../utils/interceptors/logger.interceptor';
-import type { Response, Express } from 'express';
+import { type Response, type Express, request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import type { Request as ExpressRequest } from 'express';
@@ -46,7 +45,8 @@ import { throttle } from 'rxjs';
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { UserCacheInterceptor } from './interceptors/UserCash.interceptor';
-
+import { RefreshGuard } from 'src/auth/guards/refresh.guard.ts.guard';
+import {JwtGuard} from 'src/auth/guards/jwt.guard'
 
 @Controller()
 @CacheTTL(3000)
@@ -74,16 +74,18 @@ export class UsersController {
   }
   @Get('/api/v1/users/me')
   @UseGuards(ProtectGard)
+  // @UseGuards(JwtGuard)
   @UseInterceptors(LoggerInterceptor,
-     UserCacheInterceptor
+    //  UserCacheInterceptor
     )
     @CacheTTL(60000)
   
-  public async  getMe(@GetCurrentUser() payload: User) {
+  public async  getMe(
+  @GetCurrentUser() user: User,
+  @Req() req: ExpressRequest) {
     console.log('in the routeHandler');
-    let user = await this.UserService.getOne(payload.id)
-     return user; 
-    // return this.UserService.getOne(payload.id);
+    // return req['user'];
+    return this.UserService.getOne(user.id);
   }
   @UseGuards(ProtectGard)
   @Patch('/api/v1/users/updateMe')

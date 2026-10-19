@@ -3,15 +3,17 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  Res,
   UnauthorizedException,
 } from '@nestjs/common';
 //import { ConfigService } from "@nestjs/config";
 import { JwtService } from '@nestjs/jwt';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { CURENT_USER_KEY } from '../../utils/constants';
 import { UserService } from '../../users/User.Service';
 import { ConfigService } from '@nestjs/config';
 import {JwtPayloadType} from '../../utils/types';
+import { AuthProvider } from '../providers/auth.provider';
 // import { Authconfig } from 'src/config/AuthClass';
 
 @Injectable()
@@ -20,9 +22,11 @@ export class ProtectGard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
+    private readonly authProvider:AuthProvider
   ) {}
   async canActivate(context: ExecutionContext) {
     const req: Request = context.switchToHttp().getRequest();
+    const res = context.switchToHttp().getResponse();
     // console.log('req.headers', req.headers.authorization);
     // exam the req.cookie have a token
     const [type, jwtToken] = req.headers.authorization?.split(' ') ?? [];
@@ -48,7 +52,7 @@ export class ProtectGard implements CanActivate {
         }
         payload = await this.jwtService.verifyAsync<JwtPayloadType>(jwtToken, {
           secret,
-          //ignoreExpiration:true
+          ignoreExpiration: false
         });
         // console.log('decoded jwt', payload);
       } else {
@@ -74,6 +78,13 @@ export class ProtectGard implements CanActivate {
         throw new UnauthorizedException('Token invalid due to password change');
       }
     }
+    if( payload.accessTokenVersion !== currentUser.accessTokenVersion)
+        {
+            await this.authProvider.logOut(currentUser);
+            res.clearCookie('RefreshToken', { httpOnly: true, path: '/' });
+            res.clearCookie('csrfToken', { httpOnly: false, path: '/' });
+            throw new UnauthorizedException('Token has been revoked. Please log in again !. ');
+        }
     req[CURENT_USER_KEY] = currentUser;
     //  console.log('current user in guard', currentUser)
     return true;

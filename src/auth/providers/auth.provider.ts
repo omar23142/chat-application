@@ -6,8 +6,8 @@ import {
   Injectable,
   NotFoundException,
   ParseDatePipe,
-  Request,
   RequestTimeoutException,
+  UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
 import { RejesterDto } from '../../users/dtos/Rejester.dto';
@@ -17,13 +17,15 @@ import { JwtPayloadType } from '../../utils/types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../../users/entity/User.entity';
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
+import { JwtModuleOptions, JwtService, JwtSignOptions } from '@nestjs/jwt';
 //import { ConfigService } from "@nestjs/config";
 import { MailerService } from '@nestjs-modules/mailer';
 import { MailService } from '../../mail/mail.service';
-import type { Request as ExpressRequest } from 'express';
-import { randomBytes } from 'crypto';
+import type { Request as ExpressRequest, Request, Response } from 'express';
+import { randomBytes, createHash } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { ref } from 'process';
+import { UserService } from 'src/users/User.Service';
 // import { Authconfig } from 'src/config/AuthClass';
 
 @Injectable()
@@ -81,11 +83,12 @@ export class AuthProvider {
     const payload: JwtPayloadType = {
       id: newUser.id,
       role: newUser.role,
-      iat: Date.now(),
+      iat: Date.now()/1000,
+      accessTokenVersion:newUser.accessTokenVersion,
       gender: newUser.gender,
     };
     const jwtToken = await this.jwtService.signAsync(payload, {
-      secret: this.config.get('jwt_secret_key'),
+      secret: this.config.get('JWT_SECRET_KEY'),
       
     });
     console.log('jjjjjjjjjjj', jwtToken);
@@ -119,7 +122,7 @@ export class AuthProvider {
     await this.mailService.sendValidationEmail(newUser, verificationUrl);
     return {
       newUser,
-      //jwtToken,
+      jwtToken,
       message:
         'we send email to verify your acount, pleas use the url to verify your acount ',
     };
@@ -180,12 +183,13 @@ export class AuthProvider {
       id: existUser.id,
       role: existUser.role,
       gender: existUser.gender,
-      iat: Date.now(),
+      accessTokenVersion:existUser.accessTokenVersion,
+      iat: Date.now()/1000,
     };
     console.log(payload);
 
     const jwtToken = await this.jwtService.signAsync(payload, {
-      secret: this.config.get('jwt_secret_key'),
+      secret: this.config.get('JWT_SECRET_KEY'),
     });
     console.log('login this is token', jwtToken);
     return { accessToken: jwtToken };
@@ -290,23 +294,92 @@ export class AuthProvider {
       };
     }
 
-    const accessToken = await this.generateJwtForUser(user);
-    return { accessToken, user };
+    const accessToken =  await this.generateJwtForUser(user);
+    const refreshToken = await this.generateRefreshToken(user);
+
+    // // save the refreshToken in database for use it one time and replace it every time after use the refresh route
+    // const hashedRefreshToken = await bcrypt.hash(refreshToken, 4);
+    // // user.refreshToken = hashedRefreshToken;
+    // await this.userRepo.update({id:user.id}, {refreshToken:hashedRefreshToken});
+    return { accessToken, refreshToken, user };
   }
 
+  public async generateRefreshToken(user:User) {
+      const payload: JwtPayloadType = {
+      id: user.id,
+      role: user.role,
+      gender: user.gender,
+      accessTokenVersion:user.accessTokenVersion,
+      iat: Date.now()/1000,
+    };
+
+    const RefreshToken = await this.jwtService.signAsync(payload, {
+      secret: this.config.get('Refresh_JWT_SECRET_KEY'),
+      expiresIn:this.config.get('Refresh_JWT_EXPIRES_IN')
+    }as JwtSignOptions) ;
+    // save the refreshToken in database for use it one time and replace it every time after use the refresh route
+    // const hashedRefreshToken = await bcrypt.hash(RefreshToken, 4);
+    
+    const hashedRefreshToken = createHash('sha256').update(RefreshToken).digest('hex');
+    
+    console.log('newwww hasheeed1 ', hashedRefreshToken);
+    // user.refreshToken = hashedRefreshToken;
+    await this.userRepo.update(user.id, {refreshToken:hashedRefreshToken});
+    // console.log('userrrrrrrrr', user.refreshToken);
+    return RefreshToken;
+  }
+  
   // Reusable method to generate token for any authenticated User (from either Local or OAuth flow)
   public async generateJwtForUser(user: User) {
     const payload: JwtPayloadType = {
       id: user.id,
       role: user.role,
+      accessTokenVersion:user.accessTokenVersion,
       gender: user.gender,
-      iat: Date.now(),
+      iat: Date.now()/1000,
     };
 
     const jwtToken = await this.jwtService.signAsync(payload, {
-      secret: this.config.get('jwt_secret_key'),
-    });
-
+      secret: this.config.get('JWT_SECRET_KEY'),
+      expiresIn:this.config.get('JWT_EXPIRES_IN')
+    }as JwtSignOptions) ;
+    console.log('expiresIn', this.config.get('JWT_EXPIRES_IN'));
     return jwtToken;
+  }
+
+  public async validateHashedRefreshToken( user:User, refreshToken: string | undefined) {
+    let valid = false;
+    let hashedref;
+    const hashedRefreshTokenFromDB = user.refreshToken;
+    if(!hashedRefreshTokenFromDB)
+      throw new UnauthorizedException('inValid session')
+    // valid = await bcrypt.compare(refreshToken, hashedRefreshToken);
+    if (refreshToken)
+      hashedref =  createHash('sha256').update(refreshToken).digest('hex');
+    console.log('refreshToken', refreshToken);
+    console.log('hashedref', hashedref);
+    console.log('refTokenfromDB', hashedRefreshTokenFromDB);
+    if (hashedref !== hashedRefreshTokenFromDB)
+      {
+        // to do increase the counter of access jwt 
+        await this.userRepo.update(user.id, {refreshToken: null});
+        await this.IncrementAccessTokenVersion(user);
+        throw new UnauthorizedException('unValid refreshToken!!!!!!!!');
+      }
+    valid = true
+    return valid;
+  }
+  public async logOut(user: User){
+    
+    // const user = await this.userRepo.findBy({id: userId});
+    await this.userRepo.update(user.id,{refreshToken:null});
+    await this.IncrementAccessTokenVersion(user);
+    return {message: 'you are logout sucessfully'}
+
+
+  }
+  public async IncrementAccessTokenVersion(user: User, userId?:number) {
+    let newaccessTokenVersion = user.accessTokenVersion + 1;
+    return await this.userRepo.update(user.id, {accessTokenVersion:newaccessTokenVersion});
   }
 }

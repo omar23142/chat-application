@@ -72,6 +72,7 @@ console.log('MAIN', process.env.NODE_ENV);
       useFactory: (config: ConfigService) => {
         return {
           secret: config.get<string>('JWT_SECRET_KEY'),
+          
           signOptions: {
             expiresIn: config.get<string>('JWT_EXPIRES_IN'),
           },

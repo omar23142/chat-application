@@ -10,15 +10,20 @@ import { MailModule } from '../mail/mail.module';
 import { AuthController } from './auth.controller';
 import { PasskeyModule } from './strategy/passkey/passkey.module';
 import { Passkey } from './strategy/passkey/entity/passkey.entity';
+import { RefreshGuard } from './guards/refresh.guard.ts.guard';
+import { RefreshToken } from './strategy/refreshToken.strategy';
+import { jwtStratigy } from './strategy/jwt.stratigy';
+import { UserService } from 'src/users/User.Service';
 
 @Module({
   controllers: [AuthController],
-  providers: [GoogleStrategy, LocalStrategy, AuthProvider, JwtService],
+  providers: [GoogleStrategy, LocalStrategy, jwtStratigy, AuthProvider, JwtService, RefreshToken],
   imports: [
     UsersModule,
     MailModule,
     PasskeyModule,
     TypeOrmModule.forFeature([User, Passkey]),
+    
   ],
   exports: [AuthProvider],
 })

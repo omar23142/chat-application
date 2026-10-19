@@ -6,7 +6,7 @@ Get http://localhost:3000/api/v1/users/3
 
 ###
 Get http://localhost:3000/api/v1/users/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Ik5PUk1BTF9VU0VSIiwiZ2VuZGVyIjoibWFsZSIsImlhdCI6MTc4Mzc3ODM4MTk5M30.vgAOB-qIyozQanAwVcwucQbXwfs4N7dYKy6xxfsViZs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Niwicm9sZSI6Ik5PUk1BTF9VU0VSIiwiZ2VuZGVyIjoiZmVtYWxlIiwiaWF0IjoxNzkxNDU5ODI4MDc5LCJleHAiOjE3OTE0NTk4MjgxMzl9._RLT9o6a4h_yCFDu3sokMesKO44iuBV1lMr_wvlUqxE
 
 
 ### patch update logedin user

@@ -71,11 +71,12 @@ export class GraphqlService {
           id: newUser.id,
           role: newUser.role,
           iat: Date.now(),
+          accessTokenVersion:newUser.accessTokenVersion,
           gender: newUser.gender,
         };
         const jwtToken = await this.jwtService.signAsync(payload, 
         //   {
-        //   secret: this.config.get('jwt_secret_key'),
+        //   secret: this.config.get('JWT_SECRET_KEY'),
         // }
       );
         console.log('jjjjjjjjjjj', jwtToken);
