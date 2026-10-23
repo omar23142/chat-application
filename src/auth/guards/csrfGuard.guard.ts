@@ -1,6 +1,5 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
-import { Request } from "express";
-import { Observable } from "rxjs";
+import {validateRequest} from 'src/utils/csrf.utiles';
 
 @Injectable()
 export class CsrfGuard implements CanActivate {
@@ -19,5 +18,16 @@ export class CsrfGuard implements CanActivate {
       throw new ForbiddenException('Invalid CSRF token');
     }
     return true;
+    // use the csrf-csrf library if the backend and frontend is not in the same domain
+    // validateRequest تتأكد من مطابقة الهيدر x-csrf-token مع الكوكي المخزن
+    // const isValid = validateRequest(req);
+    
+    // if (!isValid) {
+    //   throw new ForbiddenException('Invalid or missing CSRF token');
+    // }
+    
+    // return true;
+
+
   }
 }

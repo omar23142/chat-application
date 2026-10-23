@@ -285,13 +285,17 @@ export class AuthProvider {
         token = randomBytes(32).toString('hex');
         user.verificationToken = token;
         await this.userRepo.save(user);
-      }
-      const verifyUrl = this.generateVerifyUrl(user, token, req);
+        const verifyUrl = this.generateVerifyUrl(user, token, req);
       await this.mailService.sendValidationEmail(user, verifyUrl);
+      const accessToken =  await this.generateJwtForUser(user);
+      const refreshToken = await this.generateRefreshToken(user);
       return {
+        accessToken, refreshToken, user,
         message:
           'Your email is not verified. A verification email has been sent.',
       };
+      }
+      
     }
 
     const accessToken =  await this.generateJwtForUser(user);
@@ -379,7 +383,8 @@ export class AuthProvider {
 
   }
   public async IncrementAccessTokenVersion(user: User, userId?:number) {
-    let newaccessTokenVersion = user.accessTokenVersion + 1;
-    return await this.userRepo.update(user.id, {accessTokenVersion:newaccessTokenVersion});
+    // let newaccessTokenVersion = user.accessTokenVersion + 1;
+    // return await this.userRepo.update(user.id, {accessTokenVersion:newaccessTokenVersion});
+    await this.userRepo.increment({ id: user.id}, 'accessTokenVersion', 1) // this solve the race condtion that happen from user.accessTokenVersion + 1;
   }
 }

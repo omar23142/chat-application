@@ -49,14 +49,17 @@ export class AuthController {
      res.cookie('RefreshToken', refreshToken, {
       httpOnly:true, // protect from xss attack
       secure: this.config.get('NODE_ENV') === 'production', // use https 
+      path: '/',
       sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
+    // this will work if the frontend and backend in the same domain (front can reach to the backend cookie wich contain the csrf token)
     let csrfToken = randomBytes(32).toString('hex');
     // console.log('csrfffff', csrfToken);
     res.cookie('csrfToken', csrfToken,
-     { httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/' });
+     {
+       httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/',maxAge: 7 * 24 * 60 * 60 * 1000, });
       
     return {accessToken};
   }
@@ -75,14 +78,16 @@ export class AuthController {
     const accessToken = await this.authProvider.generateJwtForUser(user as User);
     const refreshToken = await this.authProvider.generateRefreshToken(user as User);
      res.cookie('RefreshToken', refreshToken, {
+      path: '/',
       httpOnly:true, // protect from xss attack
       secure: this.config.get('NODE_ENV') === 'production', // use https 
       sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
+    // this will work if the frontend and backend in the same domain (front can reach to the backend cookie wich contain the csrf token)
     res.cookie('csrfToken', randomBytes(32).toString('hex'),
      { httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/' });
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/', maxAge: 7 * 24 * 60 * 60 * 1000, });
     return { accessToken };
   }
 
@@ -99,17 +104,18 @@ export class AuthController {
     const newRefreshToken = await this.authProvider.generateRefreshToken(user as User);
     console.log('befpre cookie');
     res.cookie('RefreshToken', newRefreshToken, {
+      path: '/',
       httpOnly:true, // protect from xss attack
       secure: this.config.get('NODE_ENV') === 'production', // use https 
       sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
       maxAge: 7 * 24 * 60 * 60 * 1000
     })
-    let csrfToken = randomBytes(32).toString('hex');
-    console.log('csrfffff', csrfToken);
-    res.cookie('csrfToken', csrfToken,
-     { httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/' });
-    console.log('afterrrrrrr cookie');
+    // let csrfToken = randomBytes(32).toString('hex');
+    // console.log('csrfffff', csrfToken);
+    // res.cookie('csrfToken', csrfToken,
+    //  { httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
+    //   sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/', maxAge: 7 * 24 * 60 * 60 * 1000, });
+    // console.log('afterrrrrrr cookie');
     return { accessToken };
   }
 

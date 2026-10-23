@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import express, { request } from 'express';
 import cookieParser from 'cookie-parser';
-import csurf from 'csurf';
+import {doubleCsrf} from 'csrf-csrf';
 
  
 async function bootstrap() {
@@ -39,7 +39,8 @@ async function bootstrap() {
         }),
       );
   app.enableCors({ origin: '*', credentials: true });
-  // app.use(csurf());
+
+
   app.useGlobalFilters(new GlobalExceptionFilter);
   await app.listen(process.env.PORT ?? 3000);
 }
