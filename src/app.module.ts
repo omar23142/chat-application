@@ -18,44 +18,56 @@ import { PasskeyModule } from './auth/strategy/passkey/passkey.module';
 import { Passkey } from './auth/strategy/passkey/entity/passkey.entity';
 import { GraphqlModule } from './graphql/graphql.module';
 import { GqlThrottlerGuard } from './graphql/Guards/gql-throttler.guard';
-import { CacheInterceptor, CacheModule, CacheOptions } from '@nestjs/cache-manager';
+import {
+  CacheInterceptor,
+  CacheModule,
+  CacheOptions,
+} from '@nestjs/cache-manager';
 import KeyvRedis, { createKeyv } from '@keyv/redis';
 import Keyv from 'keyv';
 import { KeyvCacheableMemory } from 'cacheable';
+import { WinstonModule } from 'nest-winston';
+import logger from '../winston/winston';
 import { IntegerType } from 'typeorm/driver/mongodb/typings.js';
+import { Injectable, Logger } from '@nestjs/common';
 
-
+Logger.flush();
+Logger.error('this is default');
+Logger.debug('hello');
+Logger.log('ddddddd', 'from appModule');
+Logger.warn('dddd');
+Logger.detachBuffer();
 console.log('MAIN', process.env.NODE_ENV);
-
+logger.warn('hellow from the apppppppppp module');
+logger.error('this is emergenchy');
 @Module({
   imports: [
     // CacheModule.register({
     //   isGlobal: true,
-    //   ttl: 30 * 1000, 
+    //   ttl: 30 * 1000,
     // }),
-    
+    // WinstonModule.forRoot(winstonConfig),
     CacheModule.registerAsync({
       isGlobal: true,
       inject: [ConfigService],
       useFactory: async (ConfigService: ConfigService) => {
-        console.log( Number(ConfigService.get<Number>('Default_CACHE_TTL')));
-        console.log( Number(ConfigService.get<Number>('RAM_CACHE_TTL')));
-        console.log( Number(ConfigService.get<Number>('Redis_CACHE_TTL')));
+        console.log(Number(ConfigService.get<number>('Default_CACHE_TTL')));
+        console.log(Number(ConfigService.get<number>('RAM_CACHE_TTL')));
+        console.log(Number(ConfigService.get<number>('Redis_CACHE_TTL')));
 
         return {
-          ttl:  Number(ConfigService.get<Number>('Default_CACHE_TTL')),
+          ttl: Number(ConfigService.get<number>('Default_CACHE_TTL')),
           stores: [
             // المخزن الأول: الذاكرة العشوائية RAM
             new Keyv({
               store: new KeyvCacheableMemory({
-                ttl: Number(ConfigService.get<Number>('RAM_CACHE_TTL')),
+                ttl: Number(ConfigService.get<number>('RAM_CACHE_TTL')),
                 lruSize: 5000,
-              }), 
+              }),
             }),
             createKeyv(ConfigService.get<string>('Redis_URL')),
-            
           ],
-        } as CacheOptions<{ ttl: number; stores: Keyv<any>[]; }>;
+        } as CacheOptions<{ ttl: number; stores: Keyv<any>[] }>;
       },
     }),
     UsersModule,
@@ -63,8 +75,10 @@ console.log('MAIN', process.env.NODE_ENV);
       isGlobal: true,
       envFilePath:
         process.env.NODE_ENV === 'production'
-          ? `.env.${process.env.NODE_ENV}`
-          : '.env',
+          ? '.env'
+          : process.env.NODE_ENV === 'development'
+            ? '.env.development'
+            : '.env',
     }),
     JwtModule.registerAsync({
       global: true,
@@ -72,7 +86,7 @@ console.log('MAIN', process.env.NODE_ENV);
       useFactory: (config: ConfigService) => {
         return {
           secret: config.get<string>('JWT_SECRET_KEY'),
-          
+
           signOptions: {
             expiresIn: config.get<string>('JWT_EXPIRES_IN'),
           },
@@ -86,34 +100,61 @@ console.log('MAIN', process.env.NODE_ENV);
         const dbUsername =
           process.env.NODE_ENV === 'test'
             ? config.get<string>('DB_username_test')
-            : config.get<string>('DB_username');
+            : process.env.NODE_ENV === 'development_docker'
+              ? config.get<string>('DOCKER_DEV_DB_username')
+              : config.get<string>('DB_username');
         const dbpass =
           process.env.NODE_ENV === 'test'
             ? config.get<string>('DB_password_test')
-            : config.get<string>('DB_password');
+            : process.env.NODE_ENV === 'development_docker'
+              ? config.get<string>('DOCKER_DEV_DB_password')
+              : config.get<string>('DB_password');
         const database =
           process.env.NODE_ENV === 'test'
             ? config.get<string>('DB_database_test')
-            : config.get<string>('DB_database');
+            : process.env.NODE_ENV === 'development_docker'
+              ? config.get<string>('DOCKER_DEV_DB_database')
+              : config.get<string>('DB_database');
         const type =
           process.env.NODE_ENV === 'test'
             ? config.get<string>('DB_type_test')
-            : config.get<string>('DB_type');   
+            : process.env.NODE_ENV === 'development_docker'
+              ? config.get<string>('DOCKER_DEV_DB_type')
+              : config.get<string>('DB_type');
         const port =
           process.env.NODE_ENV === 'test'
             ? config.get<string>('DB_port_test')
-            : config.get<string>('DB_port');
+            : process.env.NODE_ENV === 'development_docker'
+              ? config.get<string>('DOCKER_DEV_DB_port')
+              : config.get<string>('DB_port');
+        const host =
+          process.env.NODE_ENV === 'test'
+            ? config.get<string>('DB_host_test')
+            : process.env.NODE_ENV === 'development_docker'
+              ? config.get<string>('DOCKER_DEV_DB_host')
+              : config.get<string>('DB_host');
         // console.log('dddddddd', dbUsername, dbpass, database, type, port);
+        if (process.env.NODE_ENV !== 'production') {
+          return {
+            database,
+            type,
+            username: dbUsername,
+            password: dbpass,
+            host,
+            synchronize: process.env.NODE_ENV !== 'production',
+            //dropSchema: true,
+            entities: [User, PrivateChatRoom, PrivateMessage, Passkey],
+            port,
+          } as TypeOrmModuleOptions;
+        }
         return {
-          database: database,
-          type: type,
-          username: dbUsername,
-          password: dbpass,
-          host: 'localhost',
+          type: 'postgres',
+          url: config.get<string>('DB_URL'),
+          ssl: {
+            rejectUnauthorized: false, // تسمح بالاتصال الآمن بدون تعقيد شهادات الـ SSL المحلية
+          },
           synchronize: process.env.NODE_ENV !== 'production',
-          //dropSchema: true,
           entities: [User, PrivateChatRoom, PrivateMessage, Passkey],
-          port: port,
         } as TypeOrmModuleOptions;
       },
     }),

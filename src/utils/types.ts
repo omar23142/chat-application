@@ -1,7 +1,7 @@
-export  type JwtPayloadType = {
+export type JwtPayloadType = {
   id: number;
   role: string;
   iat: number;
-  accessTokenVersion:number;
+  accessTokenVersion: number;
   gender: string;
 };

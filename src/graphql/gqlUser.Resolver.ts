@@ -1,4 +1,13 @@
-import { Resolver, Query, Mutation, Args, Int, Context, ResolveField, Parent } from '@nestjs/graphql';
+import {
+  Resolver,
+  Query,
+  Mutation,
+  Args,
+  Int,
+  Context,
+  ResolveField,
+  Parent,
+} from '@nestjs/graphql';
 import { GraphqlService } from './graphql.service';
 import { UserType } from './entities/user.graphql.entity';
 import { UserDto } from './dto/userDto';
@@ -20,13 +29,12 @@ import { MutationResult } from './entities/mutation.Result';
 
 @Resolver(() => UserType)
 export class USERResolver {
-  
   constructor(
     private readonly graphqlService: GraphqlService,
-    private readonly userService:UserService,
-    private readonly ChatService: PrivateChatService) {}
+    private readonly userService: UserService,
+    private readonly ChatService: PrivateChatService
+  ) {}
 
- 
   @Roles(userType.NORMAL_USER, userType.ADMIN)
   @UseGuards(GqlProtectGard, GqlRestrictGard)
   @Query(() => [UserType], { name: 'users' })
@@ -41,31 +49,35 @@ export class USERResolver {
 
   @Query(() => UserType, { name: 'me' })
   @UseGuards(GqlProtectGard)
-  me(@GetGqlCurrentUser() user: UserType) { return user }
+  me(@GetGqlCurrentUser() user: UserType) {
+    return user;
+  }
 
-   @ResolveField(() => messageResponse)
-    async messages(
-      @Parent() user: UserType,                                  
-      @Args('roomId', { type: () => Int }) roomId: number,   
-) {
-  return this.ChatService.getHistory(roomId, user.id);
-}
+  @ResolveField(() => messageResponse)
+  async messages(
+    @Parent() user: UserType,
+    @Args('roomId', { type: () => Int }) roomId: number
+  ) {
+    return this.ChatService.getHistory(roomId, user.id);
+  }
 
   @Query(() => String)
   userAgent(@Context('req') req: Request): string {
-  return req.headers['user-agent'] ?? '';
+    return req.headers['user-agent'] ?? '';
   }
 
   @Mutation(() => UserType)
   Rejester(@Args('userDto') user: UserDto, @Context('req') req: Request) {
-    return this.graphqlService.createUser(user, req );
+    return this.graphqlService.createUser(user, req);
   }
 
   @UseGuards(GqlProtectGard)
   @Mutation(() => UserType)
-  updateUser(@Args('updateuserDto') dto: UpdateUserDto,
- @GetGqlCurrentUser('user') user : User) {
-  console.log('rrrrrrrrrrrrrrrrr', user.id);
+  updateUser(
+    @Args('updateuserDto') dto: UpdateUserDto,
+    @GetGqlCurrentUser('user') user: User
+  ) {
+    console.log('rrrrrrrrrrrrrrrrr', user.id);
     return this.graphqlService.updateOne(dto, user.id);
   }
   @UseGuards(GqlProtectGard)
@@ -75,8 +87,10 @@ export class USERResolver {
   }
   @UseGuards(GqlProtectGard)
   @Mutation(() => MutationResult)
-  changepass(@Args('updateDto', { type: () => ChangPassDto }) dto: ChangPassDto,
-  @GetGqlCurrentUser('user') user : User) {
+  changepass(
+    @Args('updateDto', { type: () => ChangPassDto }) dto: ChangPassDto,
+    @GetGqlCurrentUser('user') user: User
+  ) {
     // console.log('ttttttttttttttttttttttttttttttt',  user.id);
     return this.graphqlService.changePassword(dto, user.id);
   }
@@ -86,21 +100,18 @@ export class USERResolver {
   async forgetPassword(
     @Args('email', { type: () => String, nullable: true }) email: string,
     @Args('userName', { type: () => String, nullable: true }) userName: string,
-    @Context('req') req: Request ,
-    @GetGqlCurrentUser() user: User) {
-
-    return  this.graphqlService.ForgetPassword(req, user, email, userName);
+    @Context('req') req: Request,
+    @GetGqlCurrentUser() user: User
+  ) {
+    return this.graphqlService.ForgetPassword(req, user, email, userName);
   }
 
   @Mutation(() => MutationResult)
-  async resetPassword(
-    @Args('input') input: ResetPasswordInput,
-  ) {
+  async resetPassword(@Args('input') input: ResetPasswordInput) {
     return this.graphqlService.resetPassword(
       input.token,
       input.newPassword,
-      input.passwordConf,
+      input.passwordConf
     );
   }
 }
-

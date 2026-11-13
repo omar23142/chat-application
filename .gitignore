@@ -2,7 +2,9 @@
 /dist
 /node_modules
 /build
-
+kubectl
+kubectl.sha256
+minikube_latest_amd64.deb
 # Logs
 logs
 *.log
@@ -36,11 +38,14 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # dotenv environment variable files
+.env.development
 .env
 .env.development.local
 .env.test.local
 .env.production.local
 .env.local
+.env.dev
+.env.*
 
 # temp directory
 .temp

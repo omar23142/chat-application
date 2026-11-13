@@ -9,5 +9,5 @@ export const GetCurrentUser = createParamDecorator(
     const req: Request = context.switchToHttp().getRequest();
     const current_user: User = req[CURENT_USER_KEY];
     return current_user;
-  },
+  }
 );

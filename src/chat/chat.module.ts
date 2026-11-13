@@ -17,10 +17,15 @@ import { MailService } from 'src/mail/mail.service';
     TypeOrmModule.forFeature([PrivateChatRoom, PrivateMessage, User]),
     UsersModule,
     JwtModule,
-    
   ],
   controllers: [ChatController],
-  providers: [PrivateChatService, RoomManger, Authgateway, AuthProvider, MailService],
+  providers: [
+    PrivateChatService,
+    RoomManger,
+    Authgateway,
+    AuthProvider,
+    MailService,
+  ],
   exports: [PrivateChatService],
 })
 export class ChatModule {}

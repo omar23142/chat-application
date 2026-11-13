@@ -17,13 +17,19 @@ import { UserService } from 'src/users/User.Service';
 
 @Module({
   controllers: [AuthController],
-  providers: [GoogleStrategy, LocalStrategy, jwtStratigy, AuthProvider, JwtService, RefreshToken],
+  providers: [
+    GoogleStrategy,
+    LocalStrategy,
+    jwtStratigy,
+    AuthProvider,
+    JwtService,
+    RefreshToken,
+  ],
   imports: [
     UsersModule,
     MailModule,
     PasskeyModule,
     TypeOrmModule.forFeature([User, Passkey]),
-    
   ],
   exports: [AuthProvider],
 })

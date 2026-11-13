@@ -12,7 +12,7 @@ import { Request, Response } from 'express';
 import { CURENT_USER_KEY } from '../../utils/constants';
 import { UserService } from '../../users/User.Service';
 import { ConfigService } from '@nestjs/config';
-import {JwtPayloadType} from '../../utils/types';
+import { JwtPayloadType } from '../../utils/types';
 import { AuthProvider } from '../providers/auth.provider';
 // import { Authconfig } from 'src/config/AuthClass';
 
@@ -22,7 +22,7 @@ export class ProtectGard implements CanActivate {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly userService: UserService,
-    private readonly authProvider:AuthProvider
+    private readonly authProvider: AuthProvider
   ) {}
   async canActivate(context: ExecutionContext) {
     const req: Request = context.switchToHttp().getRequest();
@@ -40,7 +40,6 @@ export class ProtectGard implements CanActivate {
       const token = authHeader.split(' ')[1];
       // console.log('The Token is:', JSON.stringify(token, null, 2));
     }
-    
 
     let payload: JwtPayloadType;
     try {
@@ -48,11 +47,13 @@ export class ProtectGard implements CanActivate {
         console.log('in jwt verify');
         const secret = this.config.get<string>('JWT_SECRET_KEY');
         if (!secret) {
-          throw new UnauthorizedException('access denied , invalid token or expired');
+          throw new UnauthorizedException(
+            'access denied , invalid token or expired'
+          );
         }
         payload = await this.jwtService.verifyAsync<JwtPayloadType>(jwtToken, {
           secret,
-          ignoreExpiration: false
+          ignoreExpiration: false,
         });
         // console.log('decoded jwt', payload);
       } else {
@@ -60,7 +61,7 @@ export class ProtectGard implements CanActivate {
       }
     } catch (error: unknown) {
       throw new UnauthorizedException(
-        'access denied , invalid token or expired',
+        'access denied , invalid token or expired'
       );
     }
     // exam if the user still exist in db and not deleted
@@ -72,19 +73,20 @@ export class ProtectGard implements CanActivate {
       const jwtIat = payload.iat * 1000; // seconds
       // console.log(currentUser.passwordUpdatedAt)
       const pwdChanged = currentUser.passwordUpdatedAt.getTime();
-       
+
       // console.log('teimeeeeeeeee', pwdChanged, jwtIat);
       if (jwtIat < pwdChanged) {
         throw new UnauthorizedException('Token invalid due to password change');
       }
     }
-    if( payload.accessTokenVersion !== currentUser.accessTokenVersion)
-        {
-            await this.authProvider.logOut(currentUser);
-            res.clearCookie('RefreshToken', { httpOnly: true, path: '/' });
-            res.clearCookie('csrfToken', { httpOnly: false, path: '/' });
-            throw new UnauthorizedException('Token has been revoked. Please log in again !. ');
-        }
+    if (payload.accessTokenVersion !== currentUser.accessTokenVersion) {
+      await this.authProvider.logOut(currentUser);
+      res.clearCookie('RefreshToken', { httpOnly: true, path: '/' });
+      res.clearCookie('csrfToken', { httpOnly: false, path: '/' });
+      throw new UnauthorizedException(
+        'Token has been revoked. Please log in again !. '
+      );
+    }
     req[CURENT_USER_KEY] = currentUser;
     //  console.log('current user in guard', currentUser)
     return true;

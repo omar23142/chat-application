@@ -23,7 +23,7 @@ export class PasskeyController {
   @UseGuards(ProtectGard) // Ensure the user is logged in
   public async verifyRegister(
     @Body() body: any, // The payload returned by the browser's credentials API
-    @GetCurrentUser() user: User,
+    @GetCurrentUser() user: User
   ) {
     // Verify the registered credentials
     return this.passkeyService.verifyRegistration(body, user);
@@ -42,7 +42,7 @@ export class PasskeyController {
   @Post('/login/verify')
   public async verifyLogin(
     @Body('email') email: string, // User email to lookup DB details
-    @Body('response') response: any, // The signed challenge response payload from browser
+    @Body('response') response: any // The signed challenge response payload from browser
   ) {
     // Authenticate the user and return a JWT if validation succeeds
     return this.passkeyService.verifyAuthentication(response, email);

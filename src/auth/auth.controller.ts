@@ -41,27 +41,34 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 10000 } })
   @UseGuards(AuthGuard('local'))
   @HttpCode(HttpStatus.OK)
-  public async signin(@Req() req: Request, 
-  @Res({ passthrough: true }) res:Response
-) {
-    const {accessToken, refreshToken, user} = await this.authProvider.signin(req.user as User, req);
-    console.log('before cookieeeeeeeee',refreshToken);
-     res.cookie('RefreshToken', refreshToken, {
-      httpOnly:true, // protect from xss attack
-      secure: this.config.get('NODE_ENV') === 'production', // use https 
+  public async signin(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const { accessToken, refreshToken, user } = await this.authProvider.signin(
+      req.user as User,
+      req
+    );
+    console.log('before cookieeeeeeeee', refreshToken);
+    res.cookie('RefreshToken', refreshToken, {
+      httpOnly: true, // protect from xss attack
+      secure: this.config.get('NODE_ENV') === 'production', // use https
       path: '/',
-      sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     // this will work if the frontend and backend in the same domain (front can reach to the backend cookie wich contain the csrf token)
-    let csrfToken = randomBytes(32).toString('hex');
+    const csrfToken = randomBytes(32).toString('hex');
     // console.log('csrfffff', csrfToken);
-    res.cookie('csrfToken', csrfToken,
-     {
-       httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/',maxAge: 7 * 24 * 60 * 60 * 1000, });
-      
-    return {accessToken};
+    res.cookie('csrfToken', csrfToken, {
+      httpOnly: false,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return { accessToken };
   }
 
   @Get('/google/login')
@@ -73,43 +80,56 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   public async googleCallback(
     @Req() req: Request,
-    @Res({passthrough: true}) res: Response) {
+    @Res({ passthrough: true }) res: Response
+  ) {
     const { password, ...user } = req.user as User;
-    const accessToken = await this.authProvider.generateJwtForUser(user as User);
-    const refreshToken = await this.authProvider.generateRefreshToken(user as User);
-     res.cookie('RefreshToken', refreshToken, {
+    const accessToken = await this.authProvider.generateJwtForUser(
+      user as User
+    );
+    const refreshToken = await this.authProvider.generateRefreshToken(
+      user as User
+    );
+    res.cookie('RefreshToken', refreshToken, {
       path: '/',
-      httpOnly:true, // protect from xss attack
-      secure: this.config.get('NODE_ENV') === 'production', // use https 
-      sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+      httpOnly: true, // protect from xss attack
+      secure: this.config.get('NODE_ENV') === 'production', // use https
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     // this will work if the frontend and backend in the same domain (front can reach to the backend cookie wich contain the csrf token)
-    res.cookie('csrfToken', randomBytes(32).toString('hex'),
-     { httpOnly: false, secure: this.config.get('NODE_ENV') === 'production',
-      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', path: '/', maxAge: 7 * 24 * 60 * 60 * 1000, });
+    res.cookie('csrfToken', randomBytes(32).toString('hex'), {
+      httpOnly: false,
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     return { accessToken };
   }
-
 
   @HttpCode(HttpStatus.OK)
   @Post('/refreshtoken')
   @Throttle({ default: { limit: 3, ttl: 10000 } })
   @UseGuards(CsrfGuard, RefreshGuard)
-  public async refresh(@Req() req: Request,
-   @Res({passthrough: true}) res:Response
+  public async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response
   ) {
-    const { password , refreshToken, ...user } = req.user as User;
-    const accessToken = await this.authProvider.generateJwtForUser(user as User);
-    const newRefreshToken = await this.authProvider.generateRefreshToken(user as User);
+    const { password, refreshToken, ...user } = req.user as User;
+    const accessToken = await this.authProvider.generateJwtForUser(
+      user as User
+    );
+    const newRefreshToken = await this.authProvider.generateRefreshToken(
+      user as User
+    );
     console.log('befpre cookie');
     res.cookie('RefreshToken', newRefreshToken, {
       path: '/',
-      httpOnly:true, // protect from xss attack
-      secure: this.config.get('NODE_ENV') === 'production', // use https 
-      sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
+      httpOnly: true, // protect from xss attack
+      secure: this.config.get('NODE_ENV') === 'production', // use https
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax', //protect againest csrf
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
     // let csrfToken = randomBytes(32).toString('hex');
     // console.log('csrfffff', csrfToken);
     // res.cookie('csrfToken', csrfToken,
@@ -124,14 +144,14 @@ export class AuthController {
   @Throttle({ default: { limit: 3, ttl: 10000 } })
   @UseGuards(ProtectGard)
   public logout(
-  @Res({passthrough: true}) res: Response,
-  @GetCurrentUser() user:User) {
-    res.clearCookie('RefreshToken',{
+    @Res({ passthrough: true }) res: Response,
+    @GetCurrentUser() user: User
+  ) {
+    res.clearCookie('RefreshToken', {
       httpOnly: true,
-      secure:this.config.get('NODE_ENV') === 'production',
-      sameSite:this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax'
+      secure: this.config.get('NODE_ENV') === 'production',
+      sameSite: this.config.get('NODE_ENV') === 'production' ? 'none' : 'lax',
     });
     return this.authProvider.logOut(user);
   }
-
 }

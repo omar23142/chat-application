@@ -3,12 +3,14 @@
 services:
   chat_app:
     build: 
-      context: .
+      context: ..
+      dockerfile: ./Docker/Dockerfile
       target: development
     volumes:
-      [./src:/app/src:ro] 
+      [../src:/chat-application/src:ro] 
     environment:
       - NODE_ENV=development
     env_file:
-      - ../.env
-    # command:npm run dev  
+      - ../.env.development
+    command:
+      npm run dev:docker

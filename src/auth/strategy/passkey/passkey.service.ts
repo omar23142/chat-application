@@ -27,7 +27,7 @@ export class PasskeyService {
     private readonly passkeyRepo: Repository<Passkey>, // Repository to interact with the Passkeys table
     @InjectRepository(User)
     private readonly userRepo: Repository<User>, // Repository to interact with the Users table
-    private readonly authProvider: AuthProvider, // Your provider to generate JWTs
+    private readonly authProvider: AuthProvider // Your provider to generate JWTs
   ) {}
 
   // ==========================================
@@ -70,14 +70,14 @@ export class PasskeyService {
       // Validate the device credentials signature and challenge compatibility
       verification = await verifyRegistrationResponse({
         response: body, // Raw JSON response payload sent by the browser
-        expectedChallenge: expectedChallenge, // Challenge we saved in the DB
+        expectedChallenge, // Challenge we saved in the DB
         expectedOrigin: this.origin, // Verify origin matches the client's URL
         expectedRPID: this.rpID, // Verify Reliance Party ID matches
       });
     } catch (error: unknown) {
       throw new BadRequestException(
         'WebAuthn verification failed: ' +
-          (error instanceof Error ? error.message : String(error)),
+          (error instanceof Error ? error.message : String(error))
       ); // Handle
     }
 
@@ -92,13 +92,13 @@ export class PasskeyService {
       user.passkeyChallenge = null;
       await this.userRepo.save(user); // Save the cleared field
       console.log('userid', user.id);
-      
+
       // Map and create a new Passkey entity
       const newPasskey = this.passkeyRepo.create({
-        user: user, // Link key to the authenticated user
+        user, // Link key to the authenticated user
         credentialId: id, // It is already a base64url string in SimpleWebAuthn v10
         publicKey: Buffer.from(publicKey), // Store the raw public key bytes
-        counter: counter, // Set counter
+        counter, // Set counter
       });
 
       await this.passkeyRepo.save(newPasskey); // Save the new passkey to the database
@@ -116,9 +116,9 @@ export class PasskeyService {
     // Find the user trying to log in
     const user = await this.userRepo.findOne({ where: { email } });
     console.log('email', email);
-    
+
     console.log('userrrrr', user);
-    
+
     // Throw error if user email does not exist
     if (!user) {
       throw new NotFoundException('User not found');
@@ -129,20 +129,17 @@ export class PasskeyService {
       where: { user: { id: user.id } },
     });
     console.log('userpasskeys', userPasskeys);
-    
 
     // Generate WebAuthn credentials login challenge options
     const options = await generateAuthenticationOptions({
       rpID: this.rpID, // Verify Reliance Party ID
-      allowCredentials: userPasskeys.map((passkey) => ({
+      allowCredentials: userPasskeys.map(passkey => ({
         id: passkey.credentialId, // Use the stored base64url string directly (here return array of credentialId to frontend and frontend will chose one of them based on the private key)
         // Inform the browser that this key is stored internally (internal/hybrid/usb)
         // This stops the browser from defaulting only to USB prompts
         transports: ['internal', 'hybrid'],
       })),
       userVerification: 'preferred', // Require biometric verification if available
-      
-      
     });
     console.log('optionsssssssssssssssssssssssssss', options);
 
@@ -178,7 +175,7 @@ export class PasskeyService {
     // If key ID is missing, throw exception
     if (!passkey) {
       throw new NotFoundException(
-        'Device credential not registered to this account',
+        'Device credential not registered to this account'
       );
     }
 
@@ -187,7 +184,7 @@ export class PasskeyService {
       // Authenticate signature against the challenge and the stored public key
       verification = await verifyAuthenticationResponse({
         response: body, // Authenticator response from client
-        expectedChallenge: expectedChallenge, // Original challenge stored in DB
+        expectedChallenge, // Original challenge stored in DB
         expectedOrigin: this.origin, // Match protocol/port
         expectedRPID: this.rpID, // Match domain
         credential: {
@@ -199,7 +196,7 @@ export class PasskeyService {
     } catch (error: unknown) {
       throw new BadRequestException(
         'Authentication failed: ' +
-          (error instanceof Error ? error.message : String(error)),
+          (error instanceof Error ? error.message : String(error))
       );
     }
 

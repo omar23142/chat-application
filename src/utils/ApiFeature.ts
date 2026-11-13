@@ -17,9 +17,9 @@ export class ApiFeature<T extends ObjectLiteral> {
     const queryObj = { ...this.query };
     console.log(queryObj);
     const excludeFields = ['page', 'sort', 'limit', 'field', 'relations'];
-    excludeFields.forEach((el) => delete queryObj[el]);
+    excludeFields.forEach(el => delete queryObj[el]);
     console.log('++++++++++', queryObj);
-    Object.keys(queryObj).forEach((key) => {
+    Object.keys(queryObj).forEach(key => {
       const value = queryObj[key];
       console.log('++++++++++', key, typeof value);
       if (typeof value === 'string' && key.includes('[')) {
@@ -63,7 +63,7 @@ export class ApiFeature<T extends ObjectLiteral> {
       }
     });
     if (minPrice !== null && maxPrice !== null) {
-      this.queryBuilder.andWhere(`price BETWEEN :minPrice AND :maxPrice`, {
+      this.queryBuilder.andWhere('price BETWEEN :minPrice AND :maxPrice', {
         minPrice,
         maxPrice,
       });
@@ -74,7 +74,7 @@ export class ApiFeature<T extends ObjectLiteral> {
     console.log(
       'Sorting by 1 ',
       typeof this.query.sort,
-      this.query.sort.length,
+      this.query.sort.length
     );
     if (this.query.sort) {
       let fieldsArray: string[] = [];
@@ -93,14 +93,14 @@ export class ApiFeature<T extends ObjectLiteral> {
         }
         this.queryBuilder.addOrderBy(
           `${this.queryBuilder.alias}.${field}`,
-          order,
+          order
         );
       });
     } else {
       console.log('Default sort by createdAt DESC');
       this.queryBuilder.addOrderBy(
         `${this.queryBuilder.alias}.createdAt`,
-        'DESC',
+        'DESC'
       );
     }
     return this;
@@ -116,7 +116,7 @@ export class ApiFeature<T extends ObjectLiteral> {
         fields = this.query.field.flatMap((item: string) => item.split(','));
       }
       this.queryBuilder.select(
-        fields.map((field: string) => `${this.queryBuilder.alias}.${field}`),
+        fields.map((field: string) => `${this.queryBuilder.alias}.${field}`)
       );
     }
     return this;
@@ -133,7 +133,7 @@ export class ApiFeature<T extends ObjectLiteral> {
   }
 
   relations(relations: string[]) {
-    relations.forEach((rel) => {
+    relations.forEach(rel => {
       this.queryBuilder.leftJoinAndSelect(`product.${rel}`, rel);
     });
 

@@ -1,14 +1,15 @@
 
 
 services:
-  express-image:
+  chat_app:
     build: 
-      context: .
+      context: ..
+      dockerfile: ./Docker/Dockerfile
       target: production
     environment:
       - NODE_ENV=production
     env_file:
-      - ./.env.prod
+      - ../.env
     command:
-      npm run start  
+      node dist/src/main.js 
  

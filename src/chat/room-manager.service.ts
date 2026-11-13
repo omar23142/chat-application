@@ -70,7 +70,7 @@ export class RoomManger {
     if (!privateRoomData) return;
     const members = privateRoomData.members;
     const second = members
-      ? Array.from(members).find((member) => member !== first)
+      ? Array.from(members).find(member => member !== first)
       : undefined;
     first.to(Room).emit(ServerEvents.PARTNER_LEFT, { roomId: Room });
     this.PrivateRoomFromSocket.delete(first);
@@ -103,25 +103,33 @@ export class RoomManger {
 
   public handleRating(client: Socket, rating: number): void {
     if (rating < 1 || rating > 5) {
-      client.emit(ServerEvents.RATING_ERROR, { message: 'Rating must be between 1 and 5' });
+      client.emit(ServerEvents.RATING_ERROR, {
+        message: 'Rating must be between 1 and 5',
+      });
       return;
     }
 
     const roomName = this.PrivateRoomFromSocket.get(client);
     if (!roomName) {
-      client.emit(ServerEvents.RATING_ERROR, { message: 'You are not in a private room' });
+      client.emit(ServerEvents.RATING_ERROR, {
+        message: 'You are not in a private room',
+      });
       return;
     }
 
     const privateRoomData = this.privateRoom.get(roomName);
     if (!privateRoomData) {
-      client.emit(ServerEvents.RATING_ERROR, { message: 'Private room not found' });
+      client.emit(ServerEvents.RATING_ERROR, {
+        message: 'Private room not found',
+      });
       return;
     }
 
     const userId = client.data.user?.id;
     if (!userId) {
-      client.emit(ServerEvents.RATING_ERROR, { message: 'User not authenticated' });
+      client.emit(ServerEvents.RATING_ERROR, {
+        message: 'User not authenticated',
+      });
       return;
     }
 
@@ -171,7 +179,7 @@ export class RoomManger {
   public handleMatchRating(
     privaterooms: string[],
     server: Server,
-    round: number,
+    round: number
   ): Array<{ userId1: number; userId2: number; roomName: string }> {
     const matches: Array<{
       userId1: number;
@@ -196,7 +204,13 @@ export class RoomManger {
         secondRating !== undefined &&
         firstRating === secondRating
       ) {
-        console.log('[handleMatchRating] MATCH FOUND:', { userId1: firstUserId, userId2: secondUserId, ratings: { firstRating, secondRating }, roomName, round });
+        console.log('[handleMatchRating] MATCH FOUND:', {
+          userId1: firstUserId,
+          userId2: secondUserId,
+          ratings: { firstRating, secondRating },
+          roomName,
+          round,
+        });
         const key = `${Math.min(firstUserId, secondUserId)}_${Math.max(firstUserId, secondUserId)}`;
         this.pendingMatches.set(key, {
           userId1: firstUserId,
@@ -206,20 +220,24 @@ export class RoomManger {
         matches.push({
           userId1: firstUserId,
           userId2: secondUserId,
-          roomName: roomName,
+          roomName,
         });
       }
     }
     return matches;
   }
 
-  public addPendingMatch(userId1: number, userId2: number, round: number): void {
+  public addPendingMatch(
+    userId1: number,
+    userId2: number,
+    round: number
+  ): void {
     const key = `${Math.min(userId1, userId2)}_${Math.max(userId1, userId2)}`;
     this.pendingMatches.set(key, { userId1, userId2, round });
   }
 
   public getAllPendingMatches(): Array<{ userId1: number; userId2: number }> {
-    return Array.from(this.pendingMatches.values()).map((m) => ({
+    return Array.from(this.pendingMatches.values()).map(m => ({
       userId1: m.userId1,
       userId2: m.userId2,
     }));
@@ -237,10 +255,13 @@ export class RoomManger {
     return this.permanentRoomDbIds.has(roomId);
   }
 
-  public async FindmatchRoom(client: Socket, gender: 'male' | 'female'): Promise<{ room: RoomData; justBecameFull: boolean } | null> {
+  public async FindmatchRoom(
+    client: Socket,
+    gender: 'male' | 'female'
+  ): Promise<{ room: RoomData; justBecameFull: boolean } | null> {
     // 1. إذا كان النظام مشغولاً بطلب آخر، انتظر دورك في الطابور
     if (this.isLocked) {
-      await new Promise<void>((resolve) => {
+      await new Promise<void>(resolve => {
         // نضع دالة الـ resolve داخل الطابور، هذا يعني أن الـ await لن ينتهي
         // حتى يقوم شخص ما باستدعاء هذه الدالة من المصفوفة
         this.queue.push(resolve);
@@ -258,7 +279,8 @@ export class RoomManger {
         if (targetSet) targetSet.add(client);
         else if (gender === 'male') freeRoom.male = new Set([client]);
         else freeRoom.female = new Set([client]);
-        const justBecameFull = freeRoom.female?.size === 5 && freeRoom.male?.size === 5;
+        const justBecameFull =
+          freeRoom.female?.size === 5 && freeRoom.male?.size === 5;
         if (justBecameFull) freeRoom.full = true;
         this.MatchRooms.set(freeRoom.id, freeRoom);
         this.MatchRoomFromSocket.set(client, freeRoom);
@@ -266,7 +288,12 @@ export class RoomManger {
       }
       const male = gender === 'male' ? new Set([client]) : null;
       const female = gender === 'female' ? new Set([client]) : null;
-      const newRoom: RoomData = { id: this.nextId++, male, female, full: false };
+      const newRoom: RoomData = {
+        id: this.nextId++,
+        male,
+        female,
+        full: false,
+      };
       this.MatchRooms.set(newRoom.id, newRoom);
       this.MatchRoomFromSocket.set(client, newRoom);
       return { room: newRoom, justBecameFull: false };
@@ -287,12 +314,12 @@ export class RoomManger {
   public async AssignRoom(
     userId: string,
     client: Socket,
-    gender: 'male' | 'female',
+    gender: 'male' | 'female'
   ): Promise<RoomData> {
     console.log('in the assignRoom');
     // 1. إذا كان النظام مشغولاً بطلب آخر، انتظر دورك في الطابور
     if (this.isLocked) {
-      await new Promise<void>((resolve) => {
+      await new Promise<void>(resolve => {
         // نضع دالة الـ resolve داخل الطابور، هذا يعني أن الـ await لن ينتهي
         // حتى يقوم شخص ما باستدعاء هذه الدالة من المصفوفة
         this.queue.push(resolve);
@@ -357,9 +384,9 @@ export class RoomManger {
 
   public findFreeGroupRoom(
     Rooms: RoomData[],
-    gender: 'male' | 'female',
+    gender: 'male' | 'female'
   ): RoomData | null {
-    const freeRoom = Rooms.find((room) => {
+    const freeRoom = Rooms.find(room => {
       if (gender === 'female') {
         return room.female === null || room.female.size < 5;
       }
@@ -371,9 +398,9 @@ export class RoomManger {
 
   public findFreeMatchRoom(
     Rooms: RoomData[],
-    gender: 'male' | 'female',
+    gender: 'male' | 'female'
   ): RoomData | null {
-    const freeRoom = Rooms.find((room) => {
+    const freeRoom = Rooms.find(room => {
       if (gender === 'female') {
         return room.female === null || room.female.size < 5;
       }
@@ -386,16 +413,17 @@ export class RoomManger {
   public removeClientFromGroupRoom(client: Socket, gender: 'male' | 'female') {
     const room = this.getGroupRoomBySocetId(client);
     if (!room) return;
-    gender === 'male' ? room.male?.delete(client) : room.female?.delete(client);
+    if (gender === 'male') {
+      room.male?.delete(client);
+    } else {
+      room.female?.delete(client);
+    }
     this.GrouproomFromSocket.delete(client);
-    client.to(`${room.id}`).emit(
-      ServerEvents.USER_LEFT,
-      {
-        roomId: room.id,
-        userId: client.data.user.id,
-        message: `the user with id ${client.data.user.id} left the room`,
-      },
-    );
+    client.to(`${room.id}`).emit(ServerEvents.USER_LEFT, {
+      roomId: room.id,
+      userId: client.data.user.id,
+      message: `the user with id ${client.data.user.id} left the room`,
+    });
     if (
       (room.female?.size === 0 || !room.female) &&
       (room.male?.size === 0 || !room.male)

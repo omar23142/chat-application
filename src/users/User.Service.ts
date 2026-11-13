@@ -9,7 +9,7 @@ import {
   Request,
   Res,
   forwardRef,
-} from '@nestjs/common'; 
+} from '@nestjs/common';
 //import { ReviewsService } from "../reviews/reviews.service";
 import { RejesterDto } from './dtos/Rejester.dto';
 import { LoginDto } from './dtos/LoginDto.dto';
@@ -32,35 +32,44 @@ import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { instanceToPlain } from 'class-transformer';
 //import type { Request as ExpressRequest } from "express";
+import { Logger } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
+  private readonly logger: Logger = new Logger(UserService.name);
   constructor(
     //@Inject(forwardRef( () => ReviewsService))
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
     private readonly authProvider: AuthProvider,
     @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache, 
-    private readonly config:ConfigService,
-    private readonly MailService: MailService,
+    private readonly cacheManager: Cache,
+    private readonly config: ConfigService,
+    private readonly MailService: MailService
   ) {}
   public async getAll() {
     // wrap تقوم بالبحث في L1 ثم L2 ثم Database
     // وعندما تجد البيانات في L2 (Redis) تقوم تلقائياً بـ Mirroring/Backfill إلى L1 (RAM)
-    let cachKey = `users`;
+    const cachKey = 'users';
     return this.cacheManager.wrap(
       cachKey,
       async () => {
         // هذه الدالة لن تُنفذ إلا إذا كانت البيانات مفقودة من L1 و L2 معاً
-        let users =   await this.userRepo.find();
-        users.map((u)=> {
+        const users = await this.userRepo.find();
+        this.logger.debug(
+          `Fetched ${users.length} ${users} users from the database`
+        );
+        users.map(u => {
           u.password = '';
           u.ResetPassToken = '';
-          u.verificationToken = ''} );
+          u.verificationToken = '';
+        });
+        this.logger.log(
+          `Fetched ${users.length} ${users} users from the database`
+        );
         return users;
       },
-      30000, // TTL بالمللي ثانية
+      30000 // TTL بالمللي ثانية
     );
   }
 
@@ -79,7 +88,7 @@ export class UserService {
    */
   public async login(
     LoginDto: LoginDto,
-    req: ExpressRequest,
+    req: ExpressRequest
   ): Promise<
     | {
         message: string;
@@ -93,37 +102,33 @@ export class UserService {
     return this.authProvider.login(LoginDto, req);
   }
 
-  public async getOne(id: number, email?: string | null)  {
-    
+  public async getOne(id: number, email?: string | null) {
     // const cachedUser:User | undefined = await this.cacheManager.get(`${id}`);
     // if (cachedUser) {
     //   console.log('in the route handler value from cachedUser' );
     //   return cachedUser;
     // }
 
-      const current_user = await this.userRepo.findOneBy({ id }); 
+    const current_user = await this.userRepo.findOneBy({ id });
 
     if (!current_user) throw new NotFoundException('user not found');
     // await this.cacheManager.set(`${id}`, current_user, 1000 * 30);
-    console.log('in the getOne function value from database');
+    this.logger.debug('in the getOne function value from database');
     return current_user;
-
-  
   }
-  
-   
 
   public async updateOne(body: UpdateUserDto, id: number) {
-    const current_user = await this.userRepo.findOne({ where: { id: id } });
+    const current_user = await this.userRepo.findOne({ where: { id } });
     if (!current_user)
       throw new ForbiddenException('the user is no longer exist');
     const updated_user = current_user;
     updated_user.userName = body.userName ?? current_user.userName;
     updated_user.email = body.email ?? current_user.email;
     updated_user.photo = body.photo ?? current_user.photo;
-    updated_user.nativeLanguage = body.nativeLanguage ?? current_user.nativeLanguage;
+    updated_user.nativeLanguage =
+      body.nativeLanguage ?? current_user.nativeLanguage;
     updated_user.gender = body.gender ?? current_user.gender;
-    
+
     // await this.userRepo.save(updated_user);
     // let cachekey = `$/api/v1/users/me:${current_user.id}`;
     // await this.cacheManager.del(cachekey);
@@ -164,10 +169,10 @@ export class UserService {
     const current_user = await this.userRepo.findOneBy({ id });
     if (!current_user)
       throw new ForbiddenException(
-        'you are not allowed to do this(user does not exist) ',
+        'you are not allowed to do this(user does not exist) '
       );
     await this.userRepo.remove(current_user);
-    let cachekey = `$/api/v1/users/me:${current_user.id}`;
+    const cachekey = `$/api/v1/users/me:${current_user.id}`;
     await this.cacheManager.del(cachekey);
     return 'user is deleted successfuly';
   }
@@ -231,7 +236,7 @@ export class UserService {
     const user = await this.getOne(userId);
     if (user?.verificationToken === null)
       throw new NotFoundException(
-        'there is no verification token for this user',
+        'there is no verification token for this user'
       );
     // console.log('from email',verifycationEmail)
     // console.log('from database', user.verificationToken)
@@ -271,11 +276,11 @@ export class UserService {
   }
   public async ForgetPassword(
     @Request() req: ExpressRequest,
-    email?: string,
-    userName?: string,
+      email?: string,
+      userName?: string
   ) {
     let user: User | null = null;
-    if (email) user = await this.userRepo.findOne({ where: { email: email } });
+    if (email) user = await this.userRepo.findOne({ where: { email } });
     else if (userName)
       user = await this.userRepo.findOne({ where: { userName } });
     if (!user)
@@ -304,13 +309,13 @@ export class UserService {
     console.log(user);
     if (!user) {
       // throw new BadRequestException('invalid link pleas make shure you are use the link from the email we send to you')
-      return res.redirect(`http://localhost:3001/invalid-link`);
+      return res.redirect('http://localhost:3001/invalid-link');
     }
     if (
       !user?.ResetPassTokenExpires ||
       user.ResetPassTokenExpires.getTime() < Date.now()
     )
-      return res.redirect(`http://localhost:3001/invalid-link`);
+      return res.redirect('http://localhost:3001/invalid-link');
     return res.redirect(`http://localhost:3001/reset-password?token=${token}`);
   }
   public async PostResetPassword(dto: ResetPassDtoDto) {
@@ -323,7 +328,7 @@ export class UserService {
     });
     if (!user)
       throw new BadRequestException(
-        'invalid token or the token has been expired',
+        'invalid token or the token has been expired'
       );
     if (
       !user?.ResetPassTokenExpires ||
@@ -334,7 +339,7 @@ export class UserService {
       await this.userRepo.save(user);
       await this.deleteCachedUser(user.id);
       throw new BadRequestException(
-        'invalid token or the token has been expired',
+        'invalid token or the token has been expired'
       );
     }
     if (newPassword !== passwordConf)
@@ -403,9 +408,9 @@ export class UserService {
     return [];
   }
 
-  private  async deleteCachedUser(userId: number) {
-let cachekey = `$/api/v1/users/me:${userId}`;
+  private async deleteCachedUser(userId: number) {
+    const cachekey = `$/api/v1/users/me:${userId}`;
     await this.cacheManager.del(cachekey);
-    await this.cacheManager.del('users'); 
-  };
+    await this.cacheManager.del('users');
+  }
 }

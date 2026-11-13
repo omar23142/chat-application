@@ -19,24 +19,24 @@ import { ClientEvents, ServerEvents } from './chat-events';
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
 export class Authgateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
     private jwtService: JwtService,
     private readonly RoomMangerService: RoomManger,
     private readonly privateChatService: PrivateChatService,
-    private readonly userService: UserService,
+    private readonly userService: UserService
   ) {}
 
   @WebSocketServer()
-  server: Server;
+    server: Server;
 
   afterInit(server: Server) {
-    console.log(`the authgateway is run on port 3001`);
+    console.log('the authgateway is run on port 3001');
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private async runSpeedDating(matchRoom: {
@@ -46,18 +46,16 @@ export class Authgateway
   }) {
     console.log(
       '[runSpeedDating] Starting speed dating for room:',
-      matchRoom.id,
+      matchRoom.id
     );
     // snapshot at start to avoid stale sockets
-    const females = Array.from(matchRoom.female || []).filter(
-      (s) => s.connected,
-    );
-    const males = Array.from(matchRoom.male || []).filter((s) => s.connected);
+    const females = Array.from(matchRoom.female || []).filter(s => s.connected);
+    const males = Array.from(matchRoom.male || []).filter(s => s.connected);
     console.log(
       '[runSpeedDating] Females:',
       females.length,
       'Males:',
-      males.length,
+      males.length
     );
 
     for (let round = 0; round < 5; round++) {
@@ -85,9 +83,9 @@ export class Authgateway
       await this.sleep(5 * 1000);
 
       // filter out disconnected before emitting
-      const activeRooms = roomNames.filter((name) => {
+      const activeRooms = roomNames.filter(name => {
         const room = this.RoomMangerService.privateRoom.get(name);
-        return room && Array.from(room.members).some((s) => s.connected);
+        return room && Array.from(room.members).some(s => s.connected);
       });
 
       this.server.to(activeRooms).emit(ServerEvents.ROUND_ENDED, { round });
@@ -97,14 +95,14 @@ export class Authgateway
 
       await Promise.all(
         activeRooms.map(
-          (name) =>
-            new Promise<void>((resolve) => {
+          name =>
+            new Promise<void>(resolve => {
               const room = this.RoomMangerService.privateRoom.get(name);
               const members = room
-                ? Array.from(room.members).filter((s) => s.connected)
+                ? Array.from(room.members).filter(s => s.connected)
                 : [];
               const timer = setTimeout(() => {
-                members.forEach((u) => {
+                members.forEach(u => {
                   const uid = u.data.user?.id;
                   if (uid && !room?.ratings.has(uid)) {
                     const disconnected = !(u as any).connected;
@@ -114,8 +112,8 @@ export class Authgateway
                 console.log('[runSpeedDating] Rating timeout for room:', name);
                 resolve();
               }, 30_000);
-            }),
-        ),
+            })
+        )
       );
 
       console.log('[runSpeedDating] Rating period ended, checking matches...');
@@ -124,23 +122,23 @@ export class Authgateway
     }
 
     console.log(
-      '[runSpeedDating] All rounds complete, creating permanent rooms...',
+      '[runSpeedDating] All rounds complete, creating permanent rooms...'
     );
     const matches = this.RoomMangerService.getAllPendingMatches();
     console.log('[runSpeedDating] Matches found:', matches.length);
     for (const m of matches) {
       const room = await this.privateChatService.createRoom(
         m.userId1,
-        m.userId2,
+        m.userId2
       );
       this.RoomMangerService.registerPermanentRoom(room.id);
       const user1Sockets = await this.userService.getSocketIds(m.userId1);
       const user2Sockets = await this.userService.getSocketIds(m.userId2);
-      user1Sockets.forEach((sid) =>
-        this.server.sockets.sockets.get(sid)?.join(`permanent:${room.id}`),
+      user1Sockets.forEach(sid =>
+        this.server.sockets.sockets.get(sid)?.join(`permanent:${room.id}`)
       );
-      user2Sockets.forEach((sid) =>
-        this.server.sockets.sockets.get(sid)?.join(`permanent:${room.id}`),
+      user2Sockets.forEach(sid =>
+        this.server.sockets.sockets.get(sid)?.join(`permanent:${room.id}`)
       );
       this.server
         .to(`permanent:${room.id}`)
@@ -155,7 +153,7 @@ export class Authgateway
       .emit(ServerEvents.SPEED_DATING_COMPLETE, { matches });
     console.log(
       '[runSpeedDating] Speed dating complete for room:',
-      matchRoom.id,
+      matchRoom.id
     );
   }
 
@@ -202,7 +200,7 @@ export class Authgateway
     if (client.data?.user?.gender) {
       this.RoomMangerService.removeClientFromGroupRoom(
         client,
-        client.data.user.gender,
+        client.data.user.gender
       );
     }
     this.RoomMangerService.removeClientFromPrivateRoom(client);
@@ -218,7 +216,7 @@ export class Authgateway
     try {
       const result = await this.RoomMangerService.FindmatchRoom(
         client,
-        client.data.user.gender,
+        client.data.user.gender
       );
       client.emit(ServerEvents.ENTERED_MATCH, {
         roomId: result?.room.id,
@@ -226,8 +224,8 @@ export class Authgateway
       });
       if (result?.justBecameFull) {
         console.log('[handleFindMatch] Room full, starting speed dating...');
-        this.runSpeedDating(result.room).catch((err) =>
-          console.error('[runSpeedDating] error:', err),
+        this.runSpeedDating(result.room).catch(err =>
+          console.error('[runSpeedDating] error:', err)
         );
       }
     } catch (err) {
@@ -247,7 +245,7 @@ export class Authgateway
     const room = await this.RoomMangerService.AssignRoom(
       client.data.user.id,
       client,
-      client.data.user.gender,
+      client.data.user.gender
     );
     console.log('#########', room.female?.size, room.male?.size);
     await client.join(`${room.id}`);
@@ -272,7 +270,7 @@ export class Authgateway
   @SubscribeMessage(ClientEvents.NEW_MESSAGE)
   async handleNewMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() message: { roomId: number; text: string },
+    @MessageBody() message: { roomId: number; text: string }
   ) {
     const senderId = client.data.user.id;
 
@@ -281,7 +279,7 @@ export class Authgateway
       const saved = await this.privateChatService.saveMessage(
         message.roomId,
         senderId,
-        message.text,
+        message.text
       );
       this.server
         .to(`permanent:${message.roomId}`)
@@ -305,7 +303,7 @@ export class Authgateway
   @SubscribeMessage(ClientEvents.MESSAGE_READ)
   async handleMessageRead(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number; messageId: number },
+    @MessageBody() data: { roomId: number; messageId: number }
   ) {
     // إيصالات القراءة للغرف الدائمة فقط
     if (!this.RoomMangerService.isPermanentRoom(data.roomId)) return;
@@ -315,7 +313,7 @@ export class Authgateway
       await this.privateChatService.markAsRead(
         data.roomId,
         readerId,
-        data.messageId,
+        data.messageId
       );
       this.server
         .to(`permanent:${data.roomId}`)
@@ -340,13 +338,13 @@ export class Authgateway
   @SubscribeMessage(ClientEvents.RATING)
   handleRating(
     @ConnectedSocket() client: Socket,
-    @MessageBody() rating: number,
+    @MessageBody() rating: number
   ) {
     console.log(
       '[handleRating] Rating received:',
       rating,
       'from user:',
-      client.data?.user?.id,
+      client.data?.user?.id
     );
     this.RoomMangerService.handleRating(client, rating);
   }
@@ -358,7 +356,7 @@ export class Authgateway
   @SubscribeMessage(ClientEvents.TYPING)
   handleTyping(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number | string },
+    @MessageBody() data: { roomId: number | string }
   ) {
     client.to(`${data.roomId}`).emit(ServerEvents.USER_TYPING, {
       userId: client.data.user.id,
@@ -369,7 +367,7 @@ export class Authgateway
   @SubscribeMessage(ClientEvents.STOP_TYPING)
   handleStopTyping(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: number | string },
+    @MessageBody() data: { roomId: number | string }
   ) {
     client.to(`${data.roomId}`).emit(ServerEvents.USER_STOP_TYPING, {
       userId: client.data.user.id,

@@ -22,13 +22,13 @@ export class ChatController {
     @Param('roomId', ParseIntPipe) roomId: number,
     @GetCurrentUser() user: User,
     @Query('cursor') cursor?: string,
-    @Query('limit') limit?: string,
+    @Query('limit') limit?: string
   ) {
     return this.privateChatService.getHistory(
       roomId,
       user.id,
       cursor ? new Date(cursor) : undefined,
-      limit ? parseInt(limit, 10) : undefined,
+      limit ? parseInt(limit, 10) : undefined
     );
   }
 
@@ -36,7 +36,7 @@ export class ChatController {
   @Get(':roomId/unread')
   async getUnreadCount(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @GetCurrentUser() user: User,
+    @GetCurrentUser() user: User
   ) {
     const count = await this.privateChatService.getUnreadCount(roomId, user.id);
     return { roomId, unreadCount: count };

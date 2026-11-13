@@ -37,7 +37,7 @@ export class AuthProvider {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly mailerService: MailerService,
-    private readonly mailService: MailService,
+    private readonly mailService: MailService
   ) {}
   /**
    * creat new users
@@ -61,18 +61,18 @@ export class AuthProvider {
     const existUserName = await this.userRepo.findOne({ where: { userName } });
     if (existUserName)
       throw new BadRequestException(
-        'the userName is already exist pleas chose another userName',
+        'the userName is already exist pleas chose another userName'
       );
     if (password !== passwordConf)
-      throw new BadRequestException(`password don't match with passwordConf`);
+      throw new BadRequestException("password don't match with passwordConf");
     const salt = await bcrypt.genSalt(10);
     const genPass = await bcrypt.hash(password, salt);
     const verificationToken = randomBytes(32).toString('hex');
     const newUser = this.userRepo.create({
-      userName: userName,
-      email: email,
+      userName,
+      email,
       password: genPass,
-      photo: photo,
+      photo,
       verificationToken,
       nativeLanguage,
       gender,
@@ -83,13 +83,12 @@ export class AuthProvider {
     const payload: JwtPayloadType = {
       id: newUser.id,
       role: newUser.role,
-      iat: Date.now()/1000,
-      accessTokenVersion:newUser.accessTokenVersion,
+      iat: Date.now() / 1000,
+      accessTokenVersion: newUser.accessTokenVersion,
       gender: newUser.gender,
     };
     const jwtToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get('JWT_SECRET_KEY'),
-      
     });
     console.log('jjjjjjjjjjj', jwtToken);
     // try {
@@ -116,7 +115,7 @@ export class AuthProvider {
     const verificationUrl = this.generateVerifyUrl(
       newUser,
       verificationToken,
-      req,
+      req
     );
     //await this.mailService.sendWelcome(newUser,uploadImageUrl);
     await this.mailService.sendValidationEmail(newUser, verificationUrl);
@@ -134,7 +133,7 @@ export class AuthProvider {
    */
   public async login(
     LoginDto: LoginDto,
-    req: ExpressRequest,
+    req: ExpressRequest
   ): Promise<
     | {
         message: string;
@@ -150,7 +149,7 @@ export class AuthProvider {
     // let existUser = await this.userRepo.findOne({where:{email}})
     const existUser = await this.userRepo
       .createQueryBuilder('user')
-      .where('user.email = :email', { email: email })
+      .where('user.email = :email', { email })
       .addSelect('user.password')
       .getOne();
 
@@ -183,8 +182,8 @@ export class AuthProvider {
       id: existUser.id,
       role: existUser.role,
       gender: existUser.gender,
-      accessTokenVersion:existUser.accessTokenVersion,
-      iat: Date.now()/1000,
+      accessTokenVersion: existUser.accessTokenVersion,
+      iat: Date.now() / 1000,
     };
     console.log(payload);
 
@@ -238,7 +237,7 @@ export class AuthProvider {
         password: hashedPass,
         nativeLanguage: 'unknown', // to do in frontend if the profile don't complite (nativelanguage:unknown and gender: unknown) then redirect the user to the edit detailes page
         gender: 'unknown',
-        photo: photo,
+        photo,
         isVerified: true, // Google already verified their email
       });
 
@@ -256,7 +255,7 @@ export class AuthProvider {
    */
   public async validateLocalUser(
     email: string,
-    password: string,
+    password: string
   ): Promise<User | null> {
     const user = await this.userRepo
       .createQueryBuilder('user')
@@ -286,19 +285,20 @@ export class AuthProvider {
         user.verificationToken = token;
         await this.userRepo.save(user);
         const verifyUrl = this.generateVerifyUrl(user, token, req);
-      await this.mailService.sendValidationEmail(user, verifyUrl);
-      const accessToken =  await this.generateJwtForUser(user);
-      const refreshToken = await this.generateRefreshToken(user);
-      return {
-        accessToken, refreshToken, user,
-        message:
-          'Your email is not verified. A verification email has been sent.',
-      };
+        await this.mailService.sendValidationEmail(user, verifyUrl);
+        const accessToken = await this.generateJwtForUser(user);
+        const refreshToken = await this.generateRefreshToken(user);
+        return {
+          accessToken,
+          refreshToken,
+          user,
+          message:
+            'Your email is not verified. A verification email has been sent.',
+        };
       }
-      
     }
 
-    const accessToken =  await this.generateJwtForUser(user);
+    const accessToken = await this.generateJwtForUser(user);
     const refreshToken = await this.generateRefreshToken(user);
 
     // // save the refreshToken in database for use it one time and replace it every time after use the refresh route
@@ -308,83 +308,84 @@ export class AuthProvider {
     return { accessToken, refreshToken, user };
   }
 
-  public async generateRefreshToken(user:User) {
-      const payload: JwtPayloadType = {
+  public async generateRefreshToken(user: User) {
+    const payload: JwtPayloadType = {
       id: user.id,
       role: user.role,
       gender: user.gender,
-      accessTokenVersion:user.accessTokenVersion,
-      iat: Date.now()/1000,
+      accessTokenVersion: user.accessTokenVersion,
+      iat: Date.now() / 1000,
     };
 
     const RefreshToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get('Refresh_JWT_SECRET_KEY'),
-      expiresIn:this.config.get('Refresh_JWT_EXPIRES_IN')
-    }as JwtSignOptions) ;
+      expiresIn: this.config.get('Refresh_JWT_EXPIRES_IN'),
+    } as JwtSignOptions);
     // save the refreshToken in database for use it one time and replace it every time after use the refresh route
     // const hashedRefreshToken = await bcrypt.hash(RefreshToken, 4);
-    
-    const hashedRefreshToken = createHash('sha256').update(RefreshToken).digest('hex');
-    
+
+    const hashedRefreshToken = createHash('sha256')
+      .update(RefreshToken)
+      .digest('hex');
+
     console.log('newwww hasheeed1 ', hashedRefreshToken);
     // user.refreshToken = hashedRefreshToken;
-    await this.userRepo.update(user.id, {refreshToken:hashedRefreshToken});
+    await this.userRepo.update(user.id, { refreshToken: hashedRefreshToken });
     // console.log('userrrrrrrrr', user.refreshToken);
     return RefreshToken;
   }
-  
+
   // Reusable method to generate token for any authenticated User (from either Local or OAuth flow)
   public async generateJwtForUser(user: User) {
     const payload: JwtPayloadType = {
       id: user.id,
       role: user.role,
-      accessTokenVersion:user.accessTokenVersion,
+      accessTokenVersion: user.accessTokenVersion,
       gender: user.gender,
-      iat: Date.now()/1000,
+      iat: Date.now() / 1000,
     };
 
     const jwtToken = await this.jwtService.signAsync(payload, {
       secret: this.config.get('JWT_SECRET_KEY'),
-      expiresIn:this.config.get('JWT_EXPIRES_IN')
-    }as JwtSignOptions) ;
+      expiresIn: this.config.get('JWT_EXPIRES_IN'),
+    } as JwtSignOptions);
     console.log('expiresIn', this.config.get('JWT_EXPIRES_IN'));
     return jwtToken;
   }
 
-  public async validateHashedRefreshToken( user:User, refreshToken: string | undefined) {
+  public async validateHashedRefreshToken(
+    user: User,
+    refreshToken: string | undefined
+  ) {
     let valid = false;
     let hashedref;
     const hashedRefreshTokenFromDB = user.refreshToken;
-    if(!hashedRefreshTokenFromDB)
-      throw new UnauthorizedException('inValid session')
+    if (!hashedRefreshTokenFromDB)
+      throw new UnauthorizedException('inValid session');
     // valid = await bcrypt.compare(refreshToken, hashedRefreshToken);
     if (refreshToken)
-      hashedref =  createHash('sha256').update(refreshToken).digest('hex');
+      hashedref = createHash('sha256').update(refreshToken).digest('hex');
     console.log('refreshToken', refreshToken);
     console.log('hashedref', hashedref);
     console.log('refTokenfromDB', hashedRefreshTokenFromDB);
-    if (hashedref !== hashedRefreshTokenFromDB)
-      {
-        // to do increase the counter of access jwt 
-        await this.userRepo.update(user.id, {refreshToken: null});
-        await this.IncrementAccessTokenVersion(user);
-        throw new UnauthorizedException('unValid refreshToken!!!!!!!!');
-      }
-    valid = true
+    if (hashedref !== hashedRefreshTokenFromDB) {
+      // to do increase the counter of access jwt
+      await this.userRepo.update(user.id, { refreshToken: null });
+      await this.IncrementAccessTokenVersion(user);
+      throw new UnauthorizedException('unValid refreshToken!!!!!!!!');
+    }
+    valid = true;
     return valid;
   }
-  public async logOut(user: User){
-    
+  public async logOut(user: User) {
     // const user = await this.userRepo.findBy({id: userId});
-    await this.userRepo.update(user.id,{refreshToken:null});
+    await this.userRepo.update(user.id, { refreshToken: null });
     await this.IncrementAccessTokenVersion(user);
-    return {message: 'you are logout sucessfully'}
-
-
+    return { message: 'you are logout sucessfully' };
   }
-  public async IncrementAccessTokenVersion(user: User, userId?:number) {
+  public async IncrementAccessTokenVersion(user: User, userId?: number) {
     // let newaccessTokenVersion = user.accessTokenVersion + 1;
     // return await this.userRepo.update(user.id, {accessTokenVersion:newaccessTokenVersion});
-    await this.userRepo.increment({ id: user.id}, 'accessTokenVersion', 1) // this solve the race condtion that happen from user.accessTokenVersion + 1;
+    await this.userRepo.increment({ id: user.id }, 'accessTokenVersion', 1); // this solve the race condtion that happen from user.accessTokenVersion + 1;
   }
 }

@@ -1,6 +1,6 @@
 ### all user
 Get http://localhost:3000/api/v1/users
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Ik5PUk1BTF9VU0VSIiwiaWF0IjoxNzY5MTU3NTA0fQ.ZgPxfn3H3nc8aEE6uuWKtMG_Rg3msQEGgdC5mm911r8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6Ik5PUk1BTF9VU0VSIiwiaWF0IjoxNzk0NDY1OTE0LjU2MiwiYWNjZXNzVG9rZW5WZXJzaW9uIjoxLCJnZW5kZXIiOiJmZW1hbGUifQ.lNoAsJ832ghopbWGIpcPG1VPxOmfUytW4LgpFXcbJjc
 
 Get http://localhost:3000/api/v1/users/3
 

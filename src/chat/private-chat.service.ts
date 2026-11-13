@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, Not } from 'typeorm';
 import { PrivateChatRoom } from './entity/PrivateChatRoom.entity';
@@ -13,7 +17,7 @@ export class PrivateChatService {
     @InjectRepository(PrivateMessage)
     private readonly msgRepo: Repository<PrivateMessage>,
     @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    private readonly userRepo: Repository<User>
   ) {}
 
   async createRoom(maleId: number, femaleId: number): Promise<PrivateChatRoom> {
@@ -27,15 +31,18 @@ export class PrivateChatService {
   }
 
   public async getRoomById(roomId: number) {
-    let room = await this.roomRepo.findOne({ where: { id: roomId }})
-     if (!room) {
+    const room = await this.roomRepo.findOne({ where: { id: roomId } });
+    if (!room) {
       throw new NotFoundException('Room not found');
     }
 
     return room;
   }
 
-  async getRoom(maleId: number, femaleId: number): Promise<PrivateChatRoom | null> {
+  async getRoom(
+    maleId: number,
+    femaleId: number
+  ): Promise<PrivateChatRoom | null> {
     return this.roomRepo.findOne({
       where: [
         { maleId, femaleId },
@@ -43,18 +50,16 @@ export class PrivateChatService {
       ],
     });
   }
-  public getMessages (userId: number) {
+  public getMessages(userId: number) {
     return this.msgRepo.find({
-      where: [
-        { senderId: userId}
-      ]
-    })
+      where: [{ senderId: userId }],
+    });
   }
 
   async saveMessage(
     roomId: number,
     senderId: number,
-    content: string,
+    content: string
   ): Promise<PrivateMessage> {
     const room = await this.roomRepo.findOne({ where: { id: roomId } });
     if (!room) {
@@ -80,7 +85,7 @@ export class PrivateChatService {
     roomId: number,
     userId: number,
     cursor?: Date,
-    limit = 20,
+    limit = 20
   ): Promise<{
     messages: PrivateMessage[];
     hasMore: boolean;
@@ -124,7 +129,7 @@ export class PrivateChatService {
   async markAsRead(
     roomId: number,
     userId: number,
-    messageId?: number,
+    messageId?: number
   ): Promise<void> {
     const room = await this.roomRepo.findOne({ where: { id: roomId } });
     if (!room) {
@@ -140,7 +145,7 @@ export class PrivateChatService {
       // علّم رسالة واحدة كمقروءة: نتأكد أنها ضمن غرفتها وأن القارئ ليس مرسلها
       await this.msgRepo.update(
         { id: messageId, roomId, senderId: Not(userId) },
-        { readAt: new Date() },
+        { readAt: new Date() }
       );
     } else {
       await this.msgRepo

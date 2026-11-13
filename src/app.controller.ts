@@ -3,12 +3,9 @@ import { AppService } from './app.service';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Get()
   getHello(): string {
@@ -22,6 +19,13 @@ export class AppController {
     return readFileSync(htmlPath, 'utf8');
   }
 
+  @Get('/readyz')
+  getReadyz(): string {
+    return 'READY';
+  }
 
-
+  @Get('/healthz')
+  getHealthz(): string {
+    return 'OK';
+  }
 }

@@ -18,7 +18,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { GqlGlobalExceptionFilter } from './filters/gql-global-exception.filter';
 
 @Module({
-   imports: [
+  imports: [
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/graphql/schema.gql'),
@@ -28,19 +28,17 @@ import { GqlGlobalExceptionFilter } from './filters/gql-global-exception.filter'
     UsersModule,
     ChatModule,
     MailModule,
-    TypeOrmModule.forFeature([User, PrivateChatRoom])
-    
-     
-  //   GraphQLModule.forRootAsync<ApolloDriverConfig>({
-  //     driver: ApolloDriver,
-  //     imports: [ConfigModule],
-  //     inject: [ConfigService],
-  //     useFactory: async (configService: ConfigService) => ({
-  //       // typePaths: configService.get<string>('GRAPHQL_TYPE_PATHS'),
-  //     }),
-      
-  // }),
+    TypeOrmModule.forFeature([User, PrivateChatRoom]),
 
+    //   GraphQLModule.forRootAsync<ApolloDriverConfig>({
+    //     driver: ApolloDriver,
+    //     imports: [ConfigModule],
+    //     inject: [ConfigService],
+    //     useFactory: async (configService: ConfigService) => ({
+    //       // typePaths: configService.get<string>('GRAPHQL_TYPE_PATHS'),
+    //     }),
+
+    // }),
   ],
   providers: [
     USERResolver,

@@ -10,17 +10,17 @@ export class MailService {
     user: User,
     template: string,
     subject: string,
-    url?: string,
+    url?: string
   ) {
     console.log('helow from send ');
     try {
       const firstName = user.userName.split(' ')[0];
       console.log(firstName);
-      let res = await this.mailerService.sendMail({
+      const res = await this.mailerService.sendMail({
         to: user.email,
-        from: `suportTeam@mail.com`,
+        from: 'suportTeam@mail.com',
         subject,
-        template: template,
+        template,
         context: {
           subject,
           firstname: firstName,
@@ -31,7 +31,7 @@ export class MailService {
     } catch (err) {
       console.log(err);
       throw new RequestTimeoutException(
-        'there is a problem happen when sending email to you',
+        'there is a problem happen when sending email to you'
       );
     }
   }
@@ -45,7 +45,7 @@ export class MailService {
       user,
       'resetPass',
       'Your password reset token is valid for 10 min',
-      resetUrl,
+      resetUrl
     );
   }
   public async sendValidationEmail(user: User, validationTokenUrl: string) {
@@ -54,7 +54,7 @@ export class MailService {
       user,
       'validation',
       ' EMAIL VALIDATION ',
-      validationTokenUrl,
+      validationTokenUrl
     );
   }
 }

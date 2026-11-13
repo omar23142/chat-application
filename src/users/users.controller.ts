@@ -46,7 +46,7 @@ import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { UserCacheInterceptor } from './interceptors/UserCash.interceptor';
 import { RefreshGuard } from 'src/auth/guards/refresh.guard.ts.guard';
-import {JwtGuard} from 'src/auth/guards/jwt.guard'
+import { JwtGuard } from 'src/auth/guards/jwt.guard';
 
 @Controller()
 @CacheTTL(3000)
@@ -63,26 +63,24 @@ export class UsersController {
   @UseGuards(ProtectGard, RestrictToGuard)
   @UseInterceptors(
     // CacheInterceptor,
-     ClassSerializerInterceptor, 
-       //use cachInteceptor for auto cach the data and if the data are cached then will returned without enter to routehandler
-  ) 
+    ClassSerializerInterceptor
+    //use cachInteceptor for auto cach the data and if the data are cached then will returned without enter to routehandler
+  )
   @CacheTTL(30000)
   public async getAllUsers() {
-    console.log('in the  userControuler handler',);
-    let users = await this.UserService.getAll();
+    this.loger.debug('in the  userControuler handler');
+    const users = await this.UserService.getAll();
     return users;
   }
   @Get('/api/v1/users/me')
   @UseGuards(ProtectGard)
   // @UseGuards(JwtGuard)
-  @UseInterceptors(LoggerInterceptor,
+  @UseInterceptors(
+    LoggerInterceptor
     //  UserCacheInterceptor
-    )
-    @CacheTTL(60000)
-  
-  public async  getMe(
-  @GetCurrentUser() user: User,
-  @Req() req: ExpressRequest) {
+  )
+  @CacheTTL(60000)
+  public async getMe(@GetCurrentUser() user: User, @Req() req: ExpressRequest) {
     console.log('in the routeHandler');
     // return req['user'];
     return this.UserService.getOne(user.id);
@@ -91,7 +89,7 @@ export class UsersController {
   @Patch('/api/v1/users/updateMe')
   public updateLogedInUser(
     @Body() body: UpdateUserDto,
-    @GetCurrentUser() current_user: User,
+    @GetCurrentUser() current_user: User
   ) {
     console.log('this is current user: ', current_user);
     return this.UserService.updateOne(body, current_user.id);
@@ -101,17 +99,13 @@ export class UsersController {
   @Patch('/api/v1/users/change-password')
   public changePassword(
     @Body() body: ChangPassDto,
-    @GetCurrentUser() user: User,
+    @GetCurrentUser() user: User
   ) {
     return this.UserService.changePassword(body, user.id);
   }
 
-  
-
   //api/v1/users/auth/google/callback
 
-
-  
   @Delete('/api/v1/users/deletMe')
   @UseGuards(ProtectGard)
   public deleteMe(@GetCurrentUser() user) {
@@ -126,7 +120,7 @@ export class UsersController {
   @UseInterceptors(FileInterceptor('userImage'))
   public uploadFile(
     @UploadedFile() file: Express.Multer.File,
-    @GetCurrentUser() user: User,
+    @GetCurrentUser() user: User
   ) {
     this.loger.debug(file);
     if (!file) {
@@ -152,7 +146,7 @@ export class UsersController {
   @Get('/api/v1/users/verify-email/:userId/:verifecationToken')
   public verifyEmail(
     @Param('userId', ParseIntPipe) userId: number,
-    @Param('verifecationToken') verificationToken: string,
+    @Param('verifecationToken') verificationToken: string
   ) {
     return this.UserService.VerifyEmail(userId, verificationToken);
   }
@@ -161,14 +155,14 @@ export class UsersController {
   public ForgetPass(
     // @Param('userId',ParseIntPipe) userId:number, @Param('ResetPassToken') token:string,
     @Req() req: ExpressRequest,
-    @Body() dto: ForgetPassDto,
+    @Body() dto: ForgetPassDto
   ) {
     return this.UserService.ForgetPassword(req, dto.email, dto.userName);
   }
   @Get('api/v1/users/reset-password/:ResetPassToken')
   public GetResetPass(
     @Param('ResetPassToken') token: string,
-    @Res() res: Response,
+    @Res() res: Response
   ) {
     return this.UserService.GetResetPassword(token, res);
   }
