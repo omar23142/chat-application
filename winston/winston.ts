@@ -13,11 +13,11 @@ const logger = winston.createLogger({
   ),
   defaultMeta: { service: 'chat-app' },
   transports: [
-    // 1. كتابة كافة الأخطاء (error فما أعلى) إلى ملف error.log بصيغة JSON مع الـ timestamp
-    new winston.transports.File({ filename: 'logs/error.lg', level: 'error' }),
+  
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
     
     // 2. كتابة كافة السجلات إلى ملف combined.log
-    new winston.transports.File({ filename: 'logs/combined.lg' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
   ],
 });
 

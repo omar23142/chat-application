@@ -7,7 +7,9 @@ import compression from 'compression';
 import express, { request } from 'express';
 import cookieParser from 'cookie-parser';
 import { doubleCsrf } from 'csrf-csrf';
-import { Logger } from 'winston';
+import logger  from 'winston/winston';
+// import { } from '#test/app.e2e-spec.js';
+import   morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,9 +40,22 @@ async function bootstrap() {
       transform: true, // Automatically converts query strings to types
     })
   );
+  // 6 -compain the winston logger with the morgan logger to log all requests and responses
+app.use(
+  morgan('combined', {
+    stream: {
+      write: (message: string) => {
+        logger.info(message.trim());
+      },
+    },
+  }),
+);
+
   app.enableCors({ origin: '*', credentials: true });
 
   app.useGlobalFilters(new GlobalExceptionFilter());
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
+
+
