@@ -78,7 +78,6 @@ export default tseslint.config(
       'no-unused-vars': 'warn',
       // 'no-unused-vars': 'off', // إيقاف القاعدة الأصلية واستخدام الخاصة بـ TypeScript
       'no-console': 'off',
-      
       'prefer-const': 'error',
       'no-var': 'error',
       'object-shorthand': 'error',

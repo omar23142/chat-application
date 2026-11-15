@@ -42,4 +42,5 @@ USER chatUser
 
 
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then exec node dist/src/main.js; else exec npm run dev:docker; fi"]
+

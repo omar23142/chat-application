@@ -5,47 +5,53 @@ metadata:
   labels:
     app: chat-app
 spec:
-  replicas: 4
+  replicas: 3
   selector:
     matchLabels:
       app: chat-app
   template:
     metadata:
       labels:
-        app:chat-app
+        app: chat-app
     spec:
       containers:
         - name: chat-app
-          image: omaralmgosh/chat-app-image
+          image: omaralmgosh/chat-app-image:prod
           ports:
-            - containerPort:3000
+            - containerPort: 3000
           env:
             - name: NODE_ENV
               value: "production"
+            - name: DB_HOST
+              value: "neondb_owner:npg_X2CoWHIGE4Fd@ep-soft-hat-befak3kw-pooler.c-9.us-east-2.aws.neon.tech/neondb?slmode=verify-full"   
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              value: "postegre"
+            - name: DB_PASSWORD
+              value: "postegre"
+            - name: DB_NAME
+              value: "chat-application"
             - name: POD_NAME
-              valuFrom:
+              valueFrom:
                 fieldRef:
-                  fieldPath:metadata.name
+                  fieldPath: metadata.name
           resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
             limits:
               cpu: "500m"
-              memory: "256Mi"
+              memory: "4960Mi"
           readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 10
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 3000
-          initialDelaySeconds: 15
-          periodSeconds: 20    
-
-
-
- 
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20

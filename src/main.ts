@@ -41,15 +41,15 @@ async function bootstrap() {
     })
   );
   // 6 -compain the winston logger with the morgan logger to log all requests and responses
-app.use(
-  morgan('combined', {
-    stream: {
-      write: (message: string) => {
-        logger.info(message.trim());
+  app.use(
+    morgan('combined', {
+      stream: {
+        write: (message: string) => {
+          logger.info(message.trim());
+        },
       },
-    },
-  }),
-);
+    }),
+  );
 
   app.enableCors({ origin: '*', credentials: true });
 

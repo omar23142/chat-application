@@ -1,10 +1,10 @@
 import 'tsconfig-paths/register';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User } from '/home/omaralm/Projects/chat-application/src/users/entity/User.entity';
-import { PrivateChatRoom } from '/home/omaralm/Projects/chat-application/src/chat/entity/PrivateChatRoom.entity';
-import { PrivateMessage } from '/home/omaralm/Projects/chat-application/src/chat/entity/PrivateMessage.entity';
-import { Passkey } from '/home/omaralm/Projects/chat-application/src/auth/strategy/passkey/entity/passkey.entity';
+import { User } from 'src/users/entity/User.entity';
+import { PrivateChatRoom } from 'src/chat/entity/PrivateChatRoom.entity';
+import { PrivateMessage } from 'src/chat/entity/PrivateMessage.entity';
+import { Passkey } from 'src/auth/strategy/passkey/entity/passkey.entity';
 import { Logger } from '@nestjs/common';
 
 ConfigModule.forRoot({
