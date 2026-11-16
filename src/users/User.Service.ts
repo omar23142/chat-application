@@ -33,7 +33,6 @@ import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 import { instanceToPlain } from 'class-transformer';
 //import type { Request as ExpressRequest } from "express";
 import { Logger } from '@nestjs/common';
-import loggerwinston from 'winston/winston';
 
 @Injectable()
 export class UserService {
