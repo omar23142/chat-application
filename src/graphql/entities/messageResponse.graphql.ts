@@ -4,11 +4,11 @@ import { MessageType } from './message.graphql.entity';
 @ObjectType()
 export class messageResponse {
   @Field(() => Boolean)
-  hasMore: boolean;
+    hasMore: boolean;
 
   @Field(() => Date, { nullable: true })
-  nextCursor: Date | null;
+    nextCursor: Date | null;
 
   @Field(() => [MessageType])
-  messages: MessageType[];
+    messages: MessageType[];
 }

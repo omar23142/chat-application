@@ -11,9 +11,9 @@ export class ForgetPassDto {
   @IsNotEmpty()
   @Length(5, 250)
   @IsOptional()
-  email?: string;
+    email?: string;
   @IsString()
   @Length(2, 150)
   @IsOptional()
-  userName?: string;
+    userName?: string;
 }

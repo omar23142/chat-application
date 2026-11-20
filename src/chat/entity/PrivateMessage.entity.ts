@@ -12,33 +12,33 @@ import { User } from 'src/users/entity/User.entity';
 @Entity('PrivateMessage')
 export class PrivateMessage {
   @PrimaryGeneratedColumn()
-  id: number;
+    id: number;
 
   @ManyToOne(() => PrivateChatRoom, room => room.messages, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'roomId' })
-  room: PrivateChatRoom;
+    room: PrivateChatRoom;
 
   @Column()
-  roomId: number;
+    roomId: number;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'senderId' })
-  sender: User;
+    sender: User;
 
   @Column()
-  senderId: number;
+    senderId: number;
 
   @Column({ type: 'text' })
-  content: string;
+    content: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+    createdAt: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  readAt: Date | null;
+    readAt: Date | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  deletedAt: Date | null;
+    deletedAt: Date | null;
 }
