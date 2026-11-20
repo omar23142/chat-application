@@ -47,9 +47,10 @@ jobs:
 
       - name: SHOW API_KEY
         run: echo "API_KEY = $API_KEY"  
-        
+
       - name: Upload coverage report
-        if: always() # success() cancelled() failure()
+        if: always() 
+        # success() cancelled() failure()
         uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -61,7 +62,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [lint, test]
     
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' # contains() startsWith()
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' 
+    # contains() startsWith()
     steps:
       - uses: actions/checkout@v4
 
