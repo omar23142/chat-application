@@ -17,7 +17,9 @@ describe('MailService', () => {
   } as User;
 
   beforeEach(() => {
-    mailerService = { sendMail: jest.fn().mockResolvedValue({ accepted: [user.email] }) };
+    mailerService = {
+      sendMail: jest.fn().mockResolvedValue({ accepted: [user.email] }),
+    };
     service = new MailService(mailerService as any);
   });
 

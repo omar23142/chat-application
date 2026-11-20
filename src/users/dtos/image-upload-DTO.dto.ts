@@ -8,5 +8,5 @@ export class imageUploadDto {
     required: true,
     name: 'userImage',
   })
-    file: Express.Multer.File;
+  file: Express.Multer.File;
 }

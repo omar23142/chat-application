@@ -7,9 +7,9 @@ import compression from 'compression';
 import express, { request } from 'express';
 import cookieParser from 'cookie-parser';
 import { doubleCsrf } from 'csrf-csrf';
-import logger  from 'winston/winston';
+import logger from 'winston/winston';
 // import { } from '#test/app.e2e-spec.js';
-import   morgan from 'morgan';
+import morgan from 'morgan';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -48,7 +48,7 @@ async function bootstrap() {
           logger.info(message.trim());
         },
       },
-    }),
+    })
   );
 
   app.enableCors({ origin: '*', credentials: true });
@@ -57,5 +57,3 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
-
-

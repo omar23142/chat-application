@@ -1,9 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import {
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrivateChatService } from './private-chat.service';
 import { PrivateChatRoom } from './entity/PrivateChatRoom.entity';
 import { PrivateMessage } from './entity/PrivateMessage.entity';

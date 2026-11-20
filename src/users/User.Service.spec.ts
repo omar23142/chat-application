@@ -79,15 +79,11 @@ describe('UserService', () => {
     Object.values(authProvider).forEach(mock =>
       (mock as jest.Mock).mockReset()
     );
-    Object.values(mailService).forEach(mock =>
-      (mock as jest.Mock).mockReset()
-    );
+    Object.values(mailService).forEach(mock => (mock as jest.Mock).mockReset());
     (config.get as jest.Mock).mockReset();
 
     (bcrypt.genSalt as jest.Mock).mockReset().mockResolvedValue('salt');
-    (bcrypt.hash as jest.Mock)
-      .mockReset()
-      .mockResolvedValue('hashed-password');
+    (bcrypt.hash as jest.Mock).mockReset().mockResolvedValue('hashed-password');
     (bcrypt.compare as jest.Mock).mockReset();
 
     service = await createService();
@@ -126,8 +122,8 @@ describe('UserService', () => {
       };
 
       // Simulate a cache miss: `wrap` calls the loader function.
-      cache.wrap.mockImplementation(async (_key: string, loader: () => Promise<any>) =>
-        loader()
+      cache.wrap.mockImplementation(
+        async (_key: string, loader: () => Promise<any>) => loader()
       );
       repo.find.mockResolvedValue([user]);
 

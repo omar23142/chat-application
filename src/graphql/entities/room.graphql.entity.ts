@@ -4,23 +4,23 @@ import { UserType } from './user.graphql.entity';
 @ObjectType()
 export class RoomType {
   @Field(() => Int, { description: 'user id' })
-    id: number;
+  id: number;
 
   @Field(() => Int, { description: 'user id' })
-    maleId: number;
+  maleId: number;
 
   @Field(() => Int, { description: 'user id' })
-    femaleId: number;
+  femaleId: number;
 
   @Field(() => UserType, { description: 'user id' })
-    male: UserType;
+  male: UserType;
 
   @Field(() => UserType, { description: 'user id' })
-    female: UserType;
+  female: UserType;
 
   @Field(() => Date, { description: 'user id' })
-    matchedAt: Date;
+  matchedAt: Date;
 
   @Field(() => Date, { description: 'user id' })
-    createdAt: Date;
+  createdAt: Date;
 }

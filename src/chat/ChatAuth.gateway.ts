@@ -19,7 +19,7 @@ import { ClientEvents, ServerEvents } from './chat-events';
 
 @WebSocketGateway(3001, { cors: { origin: '*' } })
 export class Authgateway
-implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
     private jwtService: JwtService,
@@ -29,7 +29,7 @@ implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   @WebSocketServer()
-    server: Server;
+  server: Server;
 
   afterInit(server: Server) {
     console.log('the authgateway is run on port 3001');

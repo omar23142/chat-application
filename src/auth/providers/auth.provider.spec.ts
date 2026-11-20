@@ -10,10 +10,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
-import {
-  BadRequestException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { createHash } from 'crypto';
 import { AuthProvider } from './auth.provider';
@@ -80,9 +77,7 @@ describe('AuthProvider', () => {
     Object.values(mailerService).forEach(mock =>
       (mock as jest.Mock).mockReset()
     );
-    Object.values(mailService).forEach(mock =>
-      (mock as jest.Mock).mockReset()
-    );
+    Object.values(mailService).forEach(mock => (mock as jest.Mock).mockReset());
 
     // bcrypt fakes
     (bcrypt.genSalt as jest.Mock).mockReset().mockResolvedValue('salt');
@@ -156,9 +151,9 @@ describe('AuthProvider', () => {
     it('should reject when the user does not exist', async () => {
       mockUserLookup(null);
 
-      await expect(service.login({ email: 'x@example.com' } as any, req)).rejects.toThrow(
-        BadRequestException
-      );
+      await expect(
+        service.login({ email: 'x@example.com' } as any, req)
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should reject when the password is wrong', async () => {

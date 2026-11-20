@@ -23,7 +23,9 @@ function makeSocket(userId: number) {
 function makeRoom(id: number, maleCount: number, femaleCount: number) {
   return {
     id,
-    male: new Set(Array.from({ length: maleCount }, (_, i) => makeSocket(i + 1))),
+    male: new Set(
+      Array.from({ length: maleCount }, (_, i) => makeSocket(i + 1))
+    ),
     female: new Set(
       Array.from({ length: femaleCount }, (_, i) => makeSocket(i + 100))
     ),
@@ -72,7 +74,11 @@ describe('RoomManger', () => {
 
       let lastRoom: any;
       for (let i = 0; i < 5; i++) {
-        lastRoom = await manager.AssignRoom(String(i + 10), makeSocket(i + 10), 'male');
+        lastRoom = await manager.AssignRoom(
+          String(i + 10),
+          makeSocket(i + 10),
+          'male'
+        );
       }
 
       expect(lastRoom.full).toBe(true);
@@ -204,7 +210,8 @@ describe('RoomManger', () => {
       manager.handleRating(alice, 5);
 
       expect(alice.emit).toHaveBeenCalledWith(ServerEvents.RATING_RECORDED, {
-        message: 'Your rating has been recorded. Waiting for partner to rate...',
+        message:
+          'Your rating has been recorded. Waiting for partner to rate...',
       });
     });
 
@@ -232,10 +239,9 @@ describe('RoomManger', () => {
 
       manager.removeClientFromPrivateRoom(alice);
 
-      expect(alice.__toEmit).toHaveBeenCalledWith(
-        ServerEvents.PARTNER_LEFT,
-        { roomId: roomName }
-      );
+      expect(alice.__toEmit).toHaveBeenCalledWith(ServerEvents.PARTNER_LEFT, {
+        roomId: roomName,
+      });
       expect(alice.leave).toHaveBeenCalledWith(roomName);
       expect(manager.privateRoom.has(roomName)).toBe(false);
     });

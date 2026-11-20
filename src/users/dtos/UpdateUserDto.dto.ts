@@ -12,14 +12,14 @@ export class UpdateUserDto {
   @IsEmail()
   @Length(5, 250)
   @IsOptional()
-    email?: string;
+  email?: string;
   @IsString()
   @Length(2, 150)
   @IsOptional()
-    userName?: string;
+  userName?: string;
   @IsOptional() @IsString() nativeLanguage?: string;
   @IsOptional() @IsString() gender?: string;
   @IsUrl()
   @IsOptional()
-    photo?: string;
+  photo?: string;
 }

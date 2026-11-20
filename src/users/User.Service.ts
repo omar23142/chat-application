@@ -277,8 +277,8 @@ export class UserService {
   }
   public async ForgetPassword(
     @Request() req: ExpressRequest,
-      email?: string,
-      userName?: string
+    email?: string,
+    userName?: string
   ) {
     let user: User | null = null;
     if (email) user = await this.userRepo.findOne({ where: { email } });

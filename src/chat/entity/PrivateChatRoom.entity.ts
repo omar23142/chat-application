@@ -13,28 +13,28 @@ import { PrivateMessage } from './PrivateMessage.entity';
 @Entity('PrivateChatRoom')
 export class PrivateChatRoom {
   @PrimaryGeneratedColumn()
-    id: number;
+  id: number;
 
   @Column()
-    maleId: number;
+  maleId: number;
 
   @Column()
-    femaleId: number;
+  femaleId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'maleId' })
-    male: User;
+  male: User;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'femaleId' })
-    female: User;
+  female: User;
 
   @CreateDateColumn()
-    matchedAt: Date;
+  matchedAt: Date;
 
   @CreateDateColumn()
-    createdAt: Date;
+  createdAt: Date;
 
   @OneToMany(() => PrivateMessage, msg => msg.room)
-    messages: PrivateMessage[];
+  messages: PrivateMessage[];
 }
