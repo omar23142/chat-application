@@ -6,16 +6,16 @@ export class ResetPasswordInput {
   @Field()
   @IsNotEmpty()
   @IsString()
-    token: string;
+    token!: string;
 
   @Field()
   @IsNotEmpty()
   @IsString()
   @MinLength(8)
-    newPassword: string;
+    newPassword!: string;
 
   @Field()
   @IsNotEmpty()
   @IsString()
-    passwordConf: string;
+    passwordConf!: string;
 }

@@ -3,31 +3,31 @@ import { ObjectType, Field, Int } from '@nestjs/graphql';
 @ObjectType()
 export class UserType {
   @Field(() => Int, { description: 'user id' })
-    id: number;
+    id!: number;
   @Field({ description: 'user role' })
-    role: string;
+    role!: string;
   @Field({ nullable: true, description: 'user name' })
-    userName: string;
+    userName!: string;
   @Field({ description: 'user email' })
-    email: string;
+    email!: string;
   @Field(() => String, { nullable: true, description: 'user photo' })
-    photo: string | null;
+    photo!: string | null;
   @Field({ description: 'is active' })
-    isActive: boolean;
+    isActive!: boolean;
   @Field({ description: 'is verified' })
-    isVerified: boolean;
+    isVerified!: boolean;
   @Field({ description: 'user native language' })
-    nativeLanguage: string;
+    nativeLanguage!: string;
   @Field({ description: 'user gender' })
-    gender: string;
+    gender!: string;
   @Field(type => Date, { description: 'acount created at' })
-    createdAt: Date;
+    createdAt!: Date;
   @Field(type => Date, { description: 'user information updated at' })
-    updatedAt: Date;
+    updatedAt!: Date;
   @Field(type => Date, { nullable: true, description: 'deleted at' })
-    deletedAt: Date | null;
+    deletedAt!: Date | null;
   @Field({ description: 'user state' })
-    isOnline: boolean;
+    isOnline!: boolean;
   @Field(type => Date, { nullable: true, description: 'user last seen ' })
-    lastSeen: Date | null;
+    lastSeen!: Date | null;
 }

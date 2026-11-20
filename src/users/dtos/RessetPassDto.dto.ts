@@ -10,13 +10,13 @@ export class ResetPassDtoDto {
   @IsString()
   @IsNotEmpty()
   @Length(8, 250)
-    newPassword: string;
+    newPassword!: string;
   @IsString()
   @IsNotEmpty()
   @Length(10, 250)
-    ResetPassToken: string;
+    ResetPassToken!: string;
   @IsString()
   @IsNotEmpty()
   @Length(8, 250)
-    passwordConf: string;
+    passwordConf!: string;
 }
